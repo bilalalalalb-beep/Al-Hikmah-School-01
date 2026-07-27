@@ -136,14 +136,19 @@ export default function AdminStudentsPage() {
   };
 
   const handleDeleteStudent = async (studentId: string, studentName: string) => {
-    if (window.confirm(locale === 'ur' ? `کیا آپ واقعی "${studentName}" کا ریکارڈ حذف (Delete) کرنا چاہتے ہیں؟ یہ عمل ناقابل واپسی ہے۔` : `Are you sure you want to delete "${studentName}"? This action cannot be undone.`)) {
+    if (window.confirm(locale === 'ur' ? `کیا آپ واقعی "${studentName}" کو ریکارڈ سے (Delete) کرنا چاہتے ہیں؟ یہ عمل ناقابل واپسی ہے۔` : `Are you sure you want to delete "${studentName}"? This action cannot be undone.`)) {
       try {
         const { error } = await (supabase as any).from('students').delete().eq('id', studentId);
-        if (error) throw error;
-        toast.success(locale === 'ur' ? 'طالب علم کا ریکارڈ کامیابی سے ڈیلیٹ ہو گیا' : 'Student deleted successfully');
-        await fetchStudentsFromDb();
+        
+        if (error) {
+          console.error("Delete Error:", error);
+          toast.error(locale === 'ur' ? 'ڈیلیٹ کرنے میں مسئلہ پیش آیا۔ (Error: ' + error.message + ')' : 'Error deleting student: ' + error.message);
+        } else {
+          toast.success(locale === 'ur' ? 'طالب علم کا ریکارڈ کامیابی سے ڈیلیٹ ہو گیا' : 'Student deleted successfully');
+          await fetchStudentsFromDb();
+        }
       } catch (err: any) {
-        toast.error(err.message || 'Error deleting student');
+        toast.error(locale === 'ur' ? 'ڈیلیٹ کرنے میں مسئلہ پیش آیا۔' : 'An error occurred during deletion.');
       }
     }
   };
