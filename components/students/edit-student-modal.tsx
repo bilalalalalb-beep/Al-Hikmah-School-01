@@ -42,7 +42,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
     watch,
     formState: { errors },
   } = useForm<StudentAdmissionFormValues>({
-    resolver: zodResolver(studentAdmissionSchema),
+    resolver: zodResolver(studentAdmissionSchema) as any,
   });
 
   const isOrphan = watch('isOrphan');
@@ -80,7 +80,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
     }
   }, [studentData, isOpen, reset]);
 
-  const onSubmit = async (data: StudentAdmissionFormValues) => {
+  const onSubmit = async (data: any) => {
     setSubmitting(true);
     try {
       const classIdMap: Record<string, string> = {
