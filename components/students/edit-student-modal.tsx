@@ -216,7 +216,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold">{locale === 'ur' ? 'ب فارم نمبر (B-Form No)' : 'B-Form Number'}</Label>
-                <Input {...register('bFormNumber')} placeholder="00000-0000000-0" className="h-10 text-xs font-en text-start" />
+                <Input {...register('studentCnic')} placeholder="00000-0000000-0" className="h-10 text-xs font-en text-start" />
               </div>
 
               {/* Financial Status Switches */}
