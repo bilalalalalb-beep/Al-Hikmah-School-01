@@ -33,19 +33,12 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
 import { createClient } from '@/lib/supabase/client';
 
-// Sample Staff Directory Data
-const initialStaffList = [
-  { id: 's1', empId: 'EMP-2026-001', nameUrdu: 'مفتی عبدالحکیم عثمانی', nameEn: 'Mufti Abdul Hakim Usmani', cnic: '35202-1111111-1', phone: '0300-1111111', gender: 'male', qualification: 'تخصص فی الفقه و الافتاء، شہادۃ العالمیہ', designationUrdu: 'مہتمم اعلیٰ و شیخ الحدیث', designationEn: 'Principal & Shaykh-ul-Hadith', department: 'nizami', basicSalary: 75000, joinDate: '2022-01-01', status: 'active' },
-  { id: 's2', empId: 'EMP-2026-002', nameUrdu: 'قاری محمد طارق مدنی', nameEn: 'Qari Muhammad Tariq Madani', cnic: '35202-2222222-1', phone: '0300-2222222', gender: 'male', qualification: 'شہادۃ الحفظ، سبعہ عشرہ قراءت', designationUrdu: 'صدر مدرس شعبہ حفظ', designationEn: 'Head Qari Hifz Dept', department: 'hifz', basicSalary: 50000, joinDate: '2023-03-15', status: 'active' },
-  { id: 's3', empId: 'EMP-2026-003', nameUrdu: 'ماسٹر کاشف علی خان', nameEn: 'Master Kashif Ali Khan', cnic: '35202-3333333-1', phone: '0300-3333333', gender: 'male', qualification: 'M.Sc Mathematics, B.Ed', designationUrdu: 'سینئر معلم سائنس و ریاضی', designationEn: 'Senior Science & Maths Teacher', department: 'school', basicSalary: 48000, joinDate: '2024-04-01', status: 'active' },
-  { id: 's4', empId: 'EMP-2026-004', nameUrdu: 'مولانا زبیر احمد قادری', nameEn: 'Maulana Zubair Ahmed Qadri', cnic: '35202-4444444-1', phone: '0300-4444444', gender: 'male', qualification: 'شہادۃ العالمیہ، M.A Arabic & Islamiat', designationUrdu: 'معلم درس نظامی و عربی ادب', designationEn: 'Lecturer Dars-e-Nizami', department: 'nizami', basicSalary: 45000, joinDate: '2024-05-10', status: 'active' },
-  { id: 's5', empId: 'EMP-2026-005', nameUrdu: 'محترمہ عائشہ صدیقہ', nameEn: 'Madam Ayesha Siddiqa', cnic: '35202-5555555-2', phone: '0300-5555555', gender: 'female', qualification: 'M.A Urdu Literature, B.Ed', designationUrdu: 'معلمہ اردو ادب و اسلامیات', designationEn: 'Senior Teacher School', department: 'school', basicSalary: 42000, joinDate: '2025-01-15', status: 'active' },
-  { id: 's6', empId: 'EMP-2026-006', nameUrdu: 'بلال احمد اعوان', nameEn: 'Bilal Ahmed Awan', cnic: '35202-6666666-1', phone: '0300-6666666', gender: 'male', qualification: 'B.Com, Diploma in Islamic Banking & IT', designationUrdu: 'محاسب و انچارج دفتر', designationEn: 'Accountant & Office Incharge', department: 'admin', basicSalary: 40000, joinDate: '2023-08-01', status: 'active' },
-];
+// No more hardcoded data. We only rely on Supabase now!
+const initialStaffList: any[] = [];
 
 export function StaffDirectory() {
   const { locale } = useLanguage();
-  const [staffList, setStaffList] = useState<any[]>(initialStaffList);
+  const [staffList, setStaffList] = useState<any[]>([]);
   const [loadingDb, setLoadingDb] = useState(false);
   const [savingDb, setSavingDb] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,7 +57,13 @@ export function StaffDirectory() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (data && data.length > 0) {
+      if (error) {
+        toast.error(`Error fetching staff: ${error.message}`);
+        console.error('Supabase error:', error);
+        return;
+      }
+
+      if (data) {
         const mapped = data.map((row: any) => ({
           id: row.id,
           empId: row.emp_id,
@@ -85,6 +84,7 @@ export function StaffDirectory() {
       }
     } catch (err) {
       console.error('Error fetching staff from Supabase:', err);
+      toast.error('Unexpected error while fetching data.');
     } finally {
       setLoadingDb(false);
     }
