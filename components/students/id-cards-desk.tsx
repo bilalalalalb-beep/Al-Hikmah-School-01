@@ -35,6 +35,7 @@ export function IdCardsDesk() {
   const { locale, dir } = useLanguage();
   const { settings } = usePortalSettings();
   const [expiryDate, setExpiryDate] = useState('31-03-2027');
+  const [showExpiryDate, setShowExpiryDate] = useState(true);
   const [showStudentCnic, setShowStudentCnic] = useState(false);
   const [cardLanguage, setCardLanguage] = useState<'ur' | 'en' | 'ar'>('ur');
   
@@ -154,12 +155,12 @@ export function IdCardsDesk() {
           </div>
 
           <!-- Profile Picture -->
-          <div style="position: absolute; top: 34%; left: 50%; transform: translateX(-50%); width: 65px; height: 65px; border-radius: 50%; background-color: #ffffff; padding: 3px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10;">
+          <div style="position: absolute; top: 29%; left: 50%; transform: translateX(-50%); width: 65px; height: 65px; border-radius: 50%; background-color: #ffffff; padding: 3px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10;">
             ${photoHtml}
           </div>
 
           <!-- Bottom Section (Triangle + Rectangle) -->
-          <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 52%; background-color: #171f27; clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 100%); display: flex; flex-direction: column; align-items: center; padding-top: 35px; color: #ffffff;">
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 55%; background-color: #171f27; clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 100%); display: flex; flex-direction: column; align-items: center; padding-top: 30px; color: #ffffff;">
             <h3 style="font-size: 14px; font-weight: bold; margin: 0; line-height: 1.2;">${fullName}</h3>
             <p style="font-size: 9px; font-weight: 500; margin: 2px 0 8px 0; color: #cbd5e1;">${classNameStr}</p>
 
@@ -189,7 +190,7 @@ export function IdCardsDesk() {
               <div style="font-weight: bold; color: #94a3b8;">${l.address}</div>
               <div>${student.residential_address || '---'}</div>
               
-              ${expiryDate ? `
+              ${showExpiryDate && expiryDate ? `
                 <div style="font-weight: bold; color: #94a3b8;">${l.expiry}</div>
                 <div style="font-family: 'Inter', sans-serif;">${expiryDate}</div>
               ` : ''}
@@ -471,6 +472,10 @@ export function IdCardsDesk() {
                     <Label className="text-xs text-slate-600">{locale === 'ur' ? 'طالب علم کا ب-فارم / CNIC' : 'Student B-Form/CNIC'}</Label>
                     <Switch checked={showStudentCnic} onCheckedChange={setShowStudentCnic} />
                   </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-slate-600">{locale === 'ur' ? 'ایکسپائری دکھائیں' : 'Show Expiry Date'}</Label>
+                    <Switch checked={showExpiryDate} onCheckedChange={setShowExpiryDate} />
+                  </div>
                   <div className="pt-2 border-t border-slate-100">
                     <Label className="text-xs text-slate-600 mb-2 block">{locale === 'ur' ? 'کارڈ کی ایکسپائری تاریخ' : 'Card Expiry Date'}</Label>
                     <Input 
@@ -478,6 +483,7 @@ export function IdCardsDesk() {
                       onChange={(e) => setExpiryDate(e.target.value)}
                       placeholder="e.g. 31-03-2027"
                       className="text-xs h-8"
+                      disabled={!showExpiryDate}
                     />
                   </div>
                 </div>
