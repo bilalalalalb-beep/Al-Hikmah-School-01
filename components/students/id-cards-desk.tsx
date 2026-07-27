@@ -97,81 +97,31 @@ export function IdCardsDesk() {
   };
 
   // Bulk Print Logic
-  const handleBulkPrint = () => {
-    if (selectedIds.size === 0) {
-      toast.error(locale === 'ur' ? 'براہ کرم پرنٹ کرنے کے لیے طلباء کو منتخب کریں' : 'Please select students to print');
-      return;
-    }
-
+  
+  const getCardsDocument = (includePrintScript: boolean) => {
+    let cardsHtml = '';
     const studentsToPrint = students.filter(s => selectedIds.has(s.id));
     
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0px';
-    iframe.style.height = '0px';
-    iframe.style.border = 'none';
-    document.body.appendChild(iframe);
-    
-    const doc = iframe.contentWindow?.document;
-    if (doc) {
-      // Build HTML string for ALL selected students
-      let cardsHtml = '';
+    studentsToPrint.forEach(student => {
+      const fullName = `${student.first_name} ${student.last_name || ''}`.trim();
+      const classNameStr = getClassName(student.current_class_id);
       
-      studentsToPrint.forEach(student => {
-        const fullName = `${student.first_name} ${student.last_name || ''}`.trim();
-        const classNameStr = getClassName(student.current_class_id);
-        
-        if (orientation === 'landscape') {
-          cardsHtml += `
-            <div class="card-container landscape-card" dir="rtl">
-              <div class="ls-header">
-                <h2 class="ls-school-name">جامعہ الحکمہ الاسلامیہ و پبلک سکول</h2>
-                <div class="ls-school-sub">STUDENT IDENTITY CARD</div>
-              </div>
-              <div class="ls-body">
-                <div class="ls-watermark">🎓</div>
-                <div class="ls-photo-section">
-                  ${student.photo_url ? `<img src="${student.photo_url}" class="ls-photo" />` : `<div class="ls-photo-placeholder"></div>`}
-                </div>
-                <div class="ls-details-section">
-                  <h3 class="ls-name">${fullName}</h3>
-                  <div class="ls-reg">${student.registration_id}</div>
-                  <div class="ls-grid">
-                    <div class="ls-label">والد:</div>
-                    <div class="ls-value">${student.father_name}</div>
-                    <div class="ls-label">کلاس:</div>
-                    <div class="ls-value" style="color:#0f766e">${classNameStr}</div>
-                    ${showContact ? `
-                      <div class="ls-label">رابطہ:</div>
-                      <div class="ls-value" style="font-family:'Inter', sans-serif">${student.father_phone || '---'}</div>
-                    ` : ''}
-                    ${showBloodGroup ? `
-                      <div class="ls-label">خون:</div>
-                      <div class="ls-value" style="color:#dc2626">${student.blood_group || '---'}</div>
-                    ` : ''}
-                    ${showFatherCnic ? `
-                      <div class="ls-label" style="font-family:'Inter', sans-serif">CNIC:</div>
-                      <div class="ls-value" style="font-family:'Inter', sans-serif">${student.father_cnic_or_id || '---'}</div>
-                    ` : ''}
-                  </div>
-                </div>
-              </div>
-              <div class="ls-footer">WWW.ALHIKMAH.EDU.PK</div>
+      if (orientation === 'landscape') {
+        cardsHtml += `
+          <div class="card-container landscape-card" dir="rtl">
+            <div class="ls-header">
+              <h2 class="ls-school-name">جامعہ الحکمہ الاسلامیہ و پبلک سکول</h2>
+              <div class="ls-school-sub">STUDENT IDENTITY CARD</div>
             </div>
-          `;
-        } else {
-          cardsHtml += `
-            <div class="card-container portrait-card" dir="rtl">
-              <div class="pt-header">
-                <h2 class="pt-school-name">جامعہ الحکمہ الاسلامیہ</h2>
-                <div class="pt-school-sub">STUDENT IDENTITY CARD</div>
+            <div class="ls-body">
+              <div class="ls-watermark">🎓</div>
+              <div class="ls-photo-section">
+                ${student.photo_url ? `<img src="${student.photo_url}" class="ls-photo" />` : `<div class="ls-photo-placeholder"></div>`}
               </div>
-              <div class="pt-body">
-                <div class="ls-watermark">🎓</div>
-                ${student.photo_url ? `<img src="${student.photo_url}" class="pt-photo" />` : `<div class="pt-photo-placeholder"></div>`}
-                <h3 class="pt-name">${fullName}</h3>
-                <div class="pt-reg">${student.registration_id}</div>
-                <div class="pt-grid">
+              <div class="ls-details-section">
+                <h3 class="ls-name">${fullName}</h3>
+                <div class="ls-reg">${student.registration_id}</div>
+                <div class="ls-grid">
                   <div class="ls-label">والد:</div>
                   <div class="ls-value">${student.father_name}</div>
                   <div class="ls-label">کلاس:</div>
@@ -190,121 +140,210 @@ export function IdCardsDesk() {
                   ` : ''}
                 </div>
               </div>
-              <div class="pt-footer">WWW.ALHIKMAH.EDU.PK</div>
             </div>
-          `;
-        }
-      });
-
-      // The container will use flex wrap to layout the cards on A4 sheets automatically
-      doc.open();
-      doc.write(`
-        <!DOCTYPE html>
-        <html lang="ur" dir="rtl">
-        <head>
-          <meta charset="UTF-8">
-          <title>Bulk_ID_Cards</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
-            
-            @page { size: A4; margin: 10mm; }
-            * { box-sizing: border-box; }
-            body { 
-              font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif; 
-              margin: 0;
-              padding: 0;
-              background-color: white; 
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            
-            .print-grid {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 5mm;
-              align-content: flex-start;
-              justify-content: flex-start;
-            }
-
-            .card-container {
-              width: ${orientation === 'landscape' ? '86mm' : '54mm'};
-              height: ${orientation === 'landscape' ? '54mm' : '86mm'};
-              position: relative;
-              overflow: hidden;
-              background: white;
-              border: 1px dashed #cbd5e1; /* Dashed border for cutting */
-              page-break-inside: avoid;
-            }
-
-            /* Reuse exact CSS from modal */
-            .landscape-card {
-              display: flex; flex-direction: column;
-              background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            }
-            .ls-header {
-              height: 28%; background: linear-gradient(to right, #064e3b, #0f766e);
-              display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border-bottom: 3px solid #d97706;
-            }
-            .ls-school-name { font-size: 14px; font-weight: 700; margin: 0; letter-spacing: 0.5px; }
-            .ls-school-sub { font-size: 8px; opacity: 0.9; font-family: 'Inter', sans-serif; }
-            .ls-body { height: 64%; display: flex; flex-direction: row; padding: 8px 12px; gap: 15px; position: relative; }
-            .ls-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; opacity: 0.03; pointer-events: none; }
-            .ls-photo-section { width: 30%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-            .ls-photo, .ls-photo-placeholder, .pt-photo, .pt-photo-placeholder {
-              width: 20mm; height: 25mm; border: 2px solid #0f766e; border-radius: 6px; background: #e2e8f0; object-fit: cover;
-            }
-            .ls-details-section { width: 70%; display: flex; flex-direction: column; justify-content: center; padding-top: 5px; }
-            .ls-name { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 2px 0; line-height: 1; }
-            .ls-reg { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px; align-self: flex-start; }
-            .ls-grid { display: grid; grid-template-columns: 35px 1fr; gap: 4px 5px; font-size: 10px; }
-            .ls-label { font-weight: 700; color: #0f766e; }
-            .ls-value { font-weight: 700; color: #334155; }
-            .ls-footer { height: 8%; background: #0f172a; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 6px; font-family: 'Inter', sans-serif; }
-
-            .portrait-card {
-              display: flex; flex-direction: column;
-              background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
-            }
-            .pt-header {
-              height: 18%; background: linear-gradient(to right, #064e3b, #0f766e);
-              display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border-bottom: 4px solid #d97706; padding-top: 5px;
-            }
-            .pt-school-name { font-size: 13px; font-weight: 700; margin: 0; }
-            .pt-school-sub { font-size: 7px; font-family: 'Inter', sans-serif; opacity: 0.9; }
-            .pt-body { height: 76%; display: flex; flex-direction: column; align-items: center; padding: 10px; position: relative; }
-            .pt-photo, .pt-photo-placeholder {
-              width: 22mm; height: 28mm; border: 3px solid #ffffff; outline: 2px solid #0f766e; border-radius: 6px; background: #e2e8f0; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-top: 5px; margin-bottom: 8px;
-            }
-            .pt-name { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2; }
-            .pt-reg { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 12px; margin-bottom: 12px; margin-top: 2px; }
-            .pt-grid { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; display: grid; grid-template-columns: 40px 1fr; gap: 6px 8px; font-size: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-            .pt-footer { height: 6%; background: #0f766e; color: white; display: flex; align-items: center; justify-content: center; font-size: 6px; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
-          </style>
-        </head>
-        <body>
-          <div class="print-grid">
-            ${cardsHtml}
+            <div class="ls-footer">WWW.ALHIKMAH.EDU.PK</div>
           </div>
-          <script>
-            // Tell the browser to wait for fonts to load before printing
-            document.fonts.ready.then(() => {
-               window.print();
-            });
-          </script>
-        </body>
-        </html>
-      `);
-      doc.close();
+        `;
+      } else {
+        cardsHtml += `
+          <div class="card-container portrait-card" dir="rtl">
+            <div class="pt-header">
+              <h2 class="pt-school-name">جامعہ الحکمہ الاسلامیہ</h2>
+              <div class="pt-school-sub">STUDENT IDENTITY CARD</div>
+            </div>
+            <div class="pt-body">
+              <div class="ls-watermark">🎓</div>
+              ${student.photo_url ? `<img src="${student.photo_url}" class="pt-photo" />` : `<div class="pt-photo-placeholder"></div>`}
+              <h3 class="pt-name">${fullName}</h3>
+              <div class="pt-reg">${student.registration_id}</div>
+              <div class="pt-grid">
+                <div class="ls-label">والد:</div>
+                <div class="ls-value">${student.father_name}</div>
+                <div class="ls-label">کلاس:</div>
+                <div class="ls-value" style="color:#0f766e">${classNameStr}</div>
+                ${showContact ? `
+                  <div class="ls-label">رابطہ:</div>
+                  <div class="ls-value" style="font-family:'Inter', sans-serif">${student.father_phone || '---'}</div>
+                ` : ''}
+                ${showBloodGroup ? `
+                  <div class="ls-label">خون:</div>
+                  <div class="ls-value" style="color:#dc2626">${student.blood_group || '---'}</div>
+                ` : ''}
+                ${showFatherCnic ? `
+                  <div class="ls-label" style="font-family:'Inter', sans-serif">CNIC:</div>
+                  <div class="ls-value" style="font-family:'Inter', sans-serif">${student.father_cnic_or_id || '---'}</div>
+                ` : ''}
+              </div>
+            </div>
+            <div class="pt-footer">WWW.ALHIKMAH.EDU.PK</div>
+          </div>
+        `;
+      }
+    });
+
+    return `
+      <!DOCTYPE html>
+      <html lang="ur" dir="rtl">
+      <head>
+        <meta charset="UTF-8">
+        <title>Bulk_ID_Cards</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
+          
+          @page { size: A4; margin: 10mm; }
+          * { box-sizing: border-box; }
+          body { 
+            font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif; 
+            margin: 0;
+            padding: 20px;
+            background-color: #f8fafc; 
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          
+          .print-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5mm;
+            align-content: flex-start;
+            justify-content: flex-start;
+          }
+
+          .card-container {
+            width: ${orientation === 'landscape' ? '86mm' : '54mm'};
+            height: ${orientation === 'landscape' ? '54mm' : '86mm'};
+            position: relative;
+            overflow: hidden;
+            background: white;
+            border: 1px dashed #cbd5e1;
+            page-break-inside: avoid;
+            ${!includePrintScript ? 'box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);' : ''}
+          }
+
+          .landscape-card {
+            display: flex; flex-direction: column;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+          }
+          .ls-header {
+            height: 28%; background: linear-gradient(to right, #064e3b, #0f766e);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border-bottom: 3px solid #d97706;
+          }
+          .ls-school-name { font-size: 14px; font-weight: 700; margin: 0; letter-spacing: 0.5px; }
+          .ls-school-sub { font-size: 8px; opacity: 0.9; font-family: 'Inter', sans-serif; }
+          .ls-body { height: 64%; display: flex; flex-direction: row; padding: 8px 12px; gap: 15px; position: relative; }
+          .ls-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; opacity: 0.03; pointer-events: none; }
+          .ls-photo-section { width: 30%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+          .ls-photo, .ls-photo-placeholder, .pt-photo, .pt-photo-placeholder {
+            width: 20mm; height: 25mm; border: 2px solid #0f766e; border-radius: 6px; background: #e2e8f0; object-fit: cover;
+          }
+          .ls-details-section { width: 70%; display: flex; flex-direction: column; justify-content: center; padding-top: 5px; }
+          .ls-name { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 2px 0; line-height: 1; }
+          .ls-reg { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px; align-self: flex-start; }
+          .ls-grid { display: grid; grid-template-columns: 35px 1fr; gap: 4px 5px; font-size: 10px; }
+          .ls-label { font-weight: 700; color: #0f766e; }
+          .ls-value { font-weight: 700; color: #334155; }
+          .ls-footer { height: 8%; background: #0f172a; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 6px; font-family: 'Inter', sans-serif; }
+
+          .portrait-card {
+            display: flex; flex-direction: column;
+            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+          }
+          .pt-header {
+            height: 18%; background: linear-gradient(to right, #064e3b, #0f766e);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border-bottom: 4px solid #d97706; padding-top: 5px;
+          }
+          .pt-school-name { font-size: 13px; font-weight: 700; margin: 0; }
+          .pt-school-sub { font-size: 7px; font-family: 'Inter', sans-serif; opacity: 0.9; }
+          .pt-body { height: 76%; display: flex; flex-direction: column; align-items: center; padding: 10px; position: relative; }
+          .pt-photo, .pt-photo-placeholder {
+            width: 22mm; height: 28mm; border: 3px solid #ffffff; outline: 2px solid #0f766e; border-radius: 6px; background: #e2e8f0; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-top: 5px; margin-bottom: 8px;
+          }
+          .pt-name { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2; }
+          .pt-reg { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 12px; margin-bottom: 12px; margin-top: 2px; }
+          .pt-grid { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; display: grid; grid-template-columns: 40px 1fr; gap: 6px 8px; font-size: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+          .pt-footer { height: 6%; background: #0f766e; color: white; display: flex; align-items: center; justify-content: center; font-size: 6px; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
+
+          .action-bar {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #cbd5e1;
+          }
+          .print-btn {
+            background: #0d9488;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Noto Nastaliq Urdu', serif;
+            box-shadow: 0 4px 6px rgba(13, 148, 136, 0.2);
+          }
+          .print-btn:hover { background: #0f766e; }
+          
+          @media print {
+            body { background: white; padding: 0; }
+            .card-container { box-shadow: none; border-color: #cbd5e1; }
+            .action-bar { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>
+        ${!includePrintScript ? `
+        <div class="action-bar">
+          <button onclick="window.print()" class="print-btn">
+            🖨️ ${locale === 'ur' ? 'ان کارڈز کو پرنٹ کریں یا PDF میں محفوظ کریں' : 'Print Cards or Save as PDF'}
+          </button>
+        </div>
+        ` : ''}
+        <div class="print-grid">
+          ${cardsHtml}
+        </div>
+        ${includePrintScript ? `
+        <script>
+          document.fonts.ready.then(() => {
+             window.print();
+          });
+        </script>
+        ` : ''}
+      </body>
+      </html>
+    `;
+  };
+
+  const handleBulkPrint = () => {
+    if (selectedIds.size === 0) {
+      toast.error(locale === 'ur' ? 'براہ کرم پرنٹ کرنے کے لیے کم از کم ایک طالب علم کا انتخاب کریں' : 'Please select at least one student');
+      return;
+    }
+
+    const doc = window.open('', '_blank');
+    if (doc) {
+      doc.document.write(getCardsDocument(true));
+      doc.document.close();
       
-      // Fallback if fonts.ready fails or takes too long
       setTimeout(() => {
         try {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
+          doc.print();
         } catch (e) {}
-      }, 5000);
+      }, 3000);
     }
+  };
+
+  const handleDownloadHtmlPdf = () => {
+    if (selectedIds.size === 0) {
+      toast.error(locale === 'ur' ? 'براہ کرم پرنٹ کرنے کے لیے کم از کم ایک طالب علم کا انتخاب کریں' : 'Please select at least one student');
+      return;
+    }
+    const fullHtml = getCardsDocument(false);
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `ID_Cards_Bulk_Print_${new Date().getTime()}.html`;
+    link.click();
+    toast.success(locale === 'ur' ? 'کارڈز کی فائل ڈاؤنلوڈ ہو گئی ہے' : 'Cards file downloaded successfully');
   };
 
   const handleExportCsv = () => {
