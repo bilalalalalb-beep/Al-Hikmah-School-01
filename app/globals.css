@@ -1,0 +1,320 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 210 33% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 158 64% 28%; /* Deep Emerald Green for School & Madrasa dignity */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 158 40% 92%;
+    --accent-foreground: 158 64% 20%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 158 64% 28%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 6%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 6%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 158 64% 45%; /* Vibrant emerald in dark mode */
+    --primary-foreground: 222.2 47.4% 1.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 158 40% 15%;
+    --accent-foreground: 158 64% 80%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 158 64% 45%;
+  }
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-nastaliq: 'Jameel Noori Nastaleeq', var(--font-nastaliq), 'Noto Nastaliq Urdu', 'Nafees Nastaleeq', 'Urdu Typesetting', serif;
+  --font-amiri: var(--font-amiri), 'Amiri', serif;
+  --font-inter: var(--font-inter), 'Inter', sans-serif;
+  --font-outfit: var(--font-outfit), 'Outfit', 'Inter', sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Jameel Noori Nastaleeq', var(--font-nastaliq), 'Noto Nastaliq Urdu', 'Nafees Nastaleeq', serif;
+    line-height: 2.0;
+  }
+}
+
+/* Authentic Nastaleeq Global Typography & Line-Height Helpers */
+html[lang="ur"] body,
+html[dir="rtl"] body,
+html[lang="ur"] div,
+html[lang="ur"] span,
+html[lang="ur"] p,
+html[lang="ur"] h1,
+html[lang="ur"] h2,
+html[lang="ur"] h3,
+html[lang="ur"] h4,
+html[lang="ur"] h5,
+html[lang="ur"] h6,
+html[lang="ur"] button,
+html[lang="ur"] input,
+html[lang="ur"] select,
+html[lang="ur"] textarea,
+html[lang="ur"] label,
+html[lang="ur"] a,
+html[lang="ur"] table,
+html[lang="ur"] th,
+html[lang="ur"] td,
+.font-ur {
+  font-family: 'Jameel Noori Nastaleeq', var(--font-nastaliq), 'Noto Nastaliq Urdu', 'Nafees Nastaleeq', 'Urdu Typesetting', serif !important;
+  line-height: 2.2 !important;
+  letter-spacing: 0.01em;
+  word-spacing: 0.05em;
+}
+
+/* High specificity English & Monospace typography to override Urdu selectors cleanly */
+html[lang="en"] body,
+html[dir="ltr"] body,
+html[lang="en"] div,
+html[lang="en"] span,
+html[lang="en"] p,
+html[lang="en"] h1,
+html[lang="en"] h2,
+html[lang="en"] h3,
+html[lang="en"] h4,
+html[lang="en"] h5,
+html[lang="en"] h6,
+html[lang="en"] button,
+html[lang="en"] input,
+html[lang="en"] select,
+html[lang="en"] textarea,
+html[lang="en"] label,
+html[lang="en"] a,
+html[lang="en"] table,
+html[lang="en"] th,
+html[lang="en"] td,
+html[lang="ur"] .font-en,
+html[dir="rtl"] .font-en,
+body .font-en,
+html[lang="ur"] span.font-en,
+html[lang="ur"] div.font-en,
+html[lang="ur"] p.font-en,
+html[lang="ur"] h1.font-en,
+html[lang="ur"] h2.font-en,
+html[lang="ur"] h3.font-en,
+html[lang="ur"] h4.font-en,
+html[lang="ur"] td.font-en,
+html[lang="ur"] th.font-en,
+html[lang="ur"] a.font-en,
+html[lang="ur"] button.font-en,
+.font-en {
+  font-family: var(--font-outfit), 'Outfit', var(--font-inter), 'Inter', 'Segoe UI', sans-serif !important;
+  line-height: 1.5 !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+}
+
+html[lang="ur"] .font-mono,
+html[dir="rtl"] .font-mono,
+body .font-mono,
+html[lang="ur"] span.font-mono,
+html[lang="ur"] div.font-mono,
+html[lang="ur"] p.font-mono,
+html[lang="ur"] td.font-mono,
+html[lang="ur"] th.font-mono,
+html[lang="ur"] input[type="number"],
+.font-mono {
+  font-family: 'Consolas', 'Courier New', monospace !important;
+  line-height: 1.5 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Global Text Selection Fix */
+::selection {
+  background-color: rgba(16, 185, 129, 0.4); /* Soft emerald highlight */
+  color: inherit;
+}
+.dark ::selection {
+  background-color: rgba(16, 185, 129, 0.6); /* Slightly darker emerald for dark mode */
+  color: #ffffff;
+}
+
+/* Sleek, Modern, Minimalist Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.65);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.45);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.75);
+}
+
+/* Utility to completely hide scrollbar in sidebars while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* =========================================================
+   PERFECT PRINT & PDF GENERATION STYLESHEET (@media print)
+   ========================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0.8cm !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Hide navigation, sidebars, buttons, toasts, and Radix backdrop overlays */
+  aside,
+  nav,
+  header,
+  footer,
+  button,
+  input,
+  [role="tablist"],
+  .print\:hidden,
+  [data-radix-focus-guard],
+  [data-state="open"][class*="fixed"],
+  .sonner-toaster,
+  #sonner-toaster {
+    display: none !important;
+  }
+
+  /* Make open dialogs take full page cleanly without background bleed */
+  [role="dialog"] {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Single Sheet guarantee for Salary Slips */
+  #printable-salary-slip {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.5rem !important;
+    border: 2px solid #047857 !important;
+    background: #ffffff !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+    box-shadow: none !important;
+  }
+
+  /* Clean tables for reports */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+    font-size: 10pt !important;
+    color: #000000 !important;
+  }
+}
+
