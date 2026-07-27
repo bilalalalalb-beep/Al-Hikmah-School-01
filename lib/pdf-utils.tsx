@@ -67,21 +67,26 @@ export const generatePdfIdCards = async (
 
     // Capture with html2canvas
     // Scale 3 provides excellent print quality
-    
-    // WORKAROUND for html2canvas RTL bug: 
-    // html2canvas mangles complex Arabic/Urdu scripts if the document is in RTL mode.
-    // By temporarily setting the document to LTR, html2canvas relies on the browser's 
-    // painted pixels rather than its flawed RTL text re-shaping engine.
-    const originalDir = document.documentElement.dir;
-    document.documentElement.dir = 'ltr';
-
     const canvas = await html2canvas(cardWrapper.firstElementChild as HTMLElement, {
       scale: 3,
       useCORS: true, // For loading external images (profile photos)
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
+      onclone: (clonedDoc) => {
+        // WORKAROUND for html2canvas RTL bug:
+        // Force the cloned document to LTR so html2canvas doesn't apply its flawed RTL text shaping.
+        clonedDoc.documentElement.dir = 'ltr';
+        clonedDoc.body.dir = 'ltr';
+        
+        // Remove dir="rtl" from the cloned card element itself
+        const rtlElements = clonedDoc.querySelectorAll('[dir="rtl"]');
+        rtlElements.forEach(el => {
+          el.setAttribute('dir', 'ltr');
+          (el as HTMLElement).style.direction = 'ltr';
+          // Ensure text stays right aligned
+          (el as HTMLElement).style.textAlign = 'right';
+        });
+      }
     });
-
-    document.documentElement.dir = originalDir;
 
     const imgData = canvas.toDataURL('image/png');
 
