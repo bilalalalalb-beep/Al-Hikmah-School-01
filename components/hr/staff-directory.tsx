@@ -488,85 +488,83 @@ export function StaffDirectory() {
               {filteredStaff.map((staff) => (
                 <div 
                   key={staff.id} 
-                  className="relative w-full h-[340px] cursor-pointer group [perspective:1000px]"
+                  className="relative w-full h-[420px] cursor-pointer group [perspective:1000px]"
                   onClick={() => setFlippedCardId(flippedCardId === staff.id ? null : staff.id)}
                 >
                   <div className={`w-full h-full relative transition-all duration-700 [transform-style:preserve-3d] ${flippedCardId === staff.id ? '[transform:rotateY(180deg)]' : ''}`}>
                     
                     {/* Front of Card */}
-                    <div className="absolute inset-0 w-full h-full rounded-2xl p-6 flex flex-col items-center justify-center text-center [backface-visibility:hidden] bg-gradient-to-b from-[#1E1E2F] to-[#12121A] border border-[#2E2E48] shadow-[0_8px_30px_rgba(0,0,0,0.4)] group-hover:shadow-[0_8px_30px_rgba(128,90,213,0.3)] transition-shadow duration-500 overflow-hidden">
-                      {/* Ambient Glow */}
-                      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-purple-500/10 to-transparent rounded-t-2xl"></div>
+                    <div className={`absolute inset-0 w-full h-full rounded-2xl p-6 flex flex-col items-center text-center [backface-visibility:hidden] border shadow-sm hover:shadow-xl transition-shadow duration-500 overflow-hidden backdrop-blur-md ${getDeptCardStyle(staff.department)}`}>
                       
-                      <div className="absolute top-4 right-4 flex justify-end w-full pr-8">
-                         <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 z-10">{staff.empId}</span>
+                      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                         <div className="opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                         <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary shrink-0">{staff.empId}</span>
                       </div>
                       
-                      <div className="w-28 h-28 mt-4 mb-5 rounded-full bg-black/50 overflow-hidden flex items-center justify-center shrink-0 border-2 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.4)] group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(168,85,247,0.6)] transition-all duration-500 z-10 relative">
+                      <div className="w-36 h-36 mt-8 mb-4 rounded-full bg-white/80 dark:bg-black/50 overflow-hidden flex items-center justify-center shrink-0 border-4 border-white/50 dark:border-white/10 shadow-lg group-hover:scale-105 transition-transform duration-500 z-10 relative">
                         {staff.photo_url ? (
                           <img src={staff.photo_url} alt={staff.nameUrdu} className="w-full h-full object-cover" />
                         ) : (
-                          <UserPlus className="w-12 h-12 text-purple-400/80 group-hover:text-purple-300 transition-colors duration-500" />
+                          <UserPlus className="w-16 h-16 text-primary/60 transition-colors duration-500" />
                         )}
                       </div>
                       
-                      <div className="w-full z-10 relative">
-                        <h4 className="text-xl font-extrabold text-white truncate px-2 tracking-wide drop-shadow-md">{locale === 'ur' ? staff.nameUrdu : staff.nameEn}</h4>
-                        <p className="text-sm font-bold text-purple-400 truncate mt-1.5 drop-shadow-sm">{locale === 'ur' ? staff.designationUrdu : staff.designationEn}</p>
-                        <div className="mt-4 inline-block px-3 py-1 bg-white/5 border border-white/10 rounded-full opacity-70 group-hover:opacity-100 transition-opacity">
-                           <span className="text-[11px] text-gray-300 font-bold">{locale === 'ur' ? 'مزید تفصیلات کیلئے کلک کریں' : 'Click for details'}</span>
+                      <div className="w-full z-10 relative flex-1 flex flex-col justify-center pb-2">
+                        <h4 className="text-[22px] font-extrabold text-foreground truncate px-2 leading-tight">{locale === 'ur' ? staff.nameUrdu : staff.nameEn}</h4>
+                        <p className="text-base font-bold text-teal-700 dark:text-teal-400 truncate mt-2">{locale === 'ur' ? staff.designationUrdu : staff.designationEn}</p>
+                        <div className="mt-6 inline-block px-4 py-1.5 bg-background/50 border border-border/50 rounded-full shadow-sm">
+                           <span className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? 'مزید تفصیلات کیلئے کلک کریں' : 'Click for details'}</span>
                         </div>
                       </div>
                     </div>
                     
                     {/* Back of Card */}
-                    <div className="absolute inset-0 w-full h-full rounded-2xl p-6 flex flex-col justify-between text-center [backface-visibility:hidden] [transform:rotateY(180deg)] bg-gradient-to-b from-[#1E1E2F] to-[#12121A] border border-[#2E2E48] shadow-[0_8px_30px_rgba(0,0,0,0.4)] group-hover:shadow-[0_8px_30px_rgba(20,184,166,0.3)] transition-shadow duration-500 overflow-hidden">
-                      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-teal-500/10 to-transparent rounded-t-2xl"></div>
+                    <div className={`absolute inset-0 w-full h-full rounded-2xl p-6 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)] border shadow-sm hover:shadow-xl transition-shadow duration-500 overflow-hidden backdrop-blur-md ${getDeptCardStyle(staff.department)}`}>
                       
-                      <div className="z-10 text-gray-200 mt-1 space-y-4">
-                        <div className="flex flex-col items-center gap-1 border-b border-white/10 pb-3">
-                           <span className="text-[11px] text-teal-400 uppercase tracking-wider font-bold">{locale === 'ur' ? 'ماہانہ تنخواہ' : 'Monthly Salary'}</span>
-                           <span className="font-mono text-2xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]">
+                      <div className="z-10 mt-1 space-y-6">
+                        <div className="flex flex-col items-center gap-2 border-b border-border/40 pb-5">
+                           <span className="text-sm text-muted-foreground uppercase tracking-wider font-bold">{locale === 'ur' ? 'ماہانہ تنخواہ' : 'Monthly Salary'}</span>
+                           <span className="font-mono text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 drop-shadow-sm">
                              Rs. {staff.basicSalary.toLocaleString()}
                            </span>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-3 text-left pt-1">
-                          <div className="space-y-1">
-                             <span className="text-[10px] text-gray-400 font-bold block">{locale === 'ur' ? 'رابطہ نمبر' : 'Phone'}</span>
-                             <span className="font-mono text-xs text-white flex items-center gap-1.5"><Phone className="w-3 h-3 text-teal-500"/> {staff.phone}</span>
+                        <div className="grid grid-cols-2 gap-5 text-start pt-2">
+                          <div className="space-y-1.5">
+                             <span className="text-sm text-muted-foreground font-bold block">{locale === 'ur' ? 'رابطہ نمبر' : 'Phone'}</span>
+                             <span className="font-mono text-[15px] font-bold text-foreground flex items-center gap-2"><Phone className="w-4 h-4 text-primary/70"/> {staff.phone}</span>
                           </div>
-                          <div className="space-y-1">
-                             <span className="text-[10px] text-gray-400 font-bold block">{locale === 'ur' ? 'شناختی کارڈ' : 'CNIC'}</span>
-                             <span className="font-mono text-xs text-white">{staff.cnic}</span>
+                          <div className="space-y-1.5">
+                             <span className="text-sm text-muted-foreground font-bold block">{locale === 'ur' ? 'شناختی کارڈ' : 'CNIC'}</span>
+                             <span className="font-mono text-[15px] font-bold text-foreground">{staff.cnic}</span>
                           </div>
-                          <div className="space-y-1 col-span-2">
-                             <span className="text-[10px] text-gray-400 font-bold block">{locale === 'ur' ? 'تعلیمی قابلیت' : 'Qualification'}</span>
-                             <span className="text-xs text-white flex items-center gap-1.5"><Award className="w-3 h-3 text-teal-500"/> {staff.qualification || '-'}</span>
+                          <div className="space-y-1.5 col-span-2">
+                             <span className="text-sm text-muted-foreground font-bold block">{locale === 'ur' ? 'تعلیمی قابلیت' : 'Qualification'}</span>
+                             <span className="text-[15px] font-bold text-foreground flex items-center gap-2"><Award className="w-4 h-4 text-amber-500"/> {staff.qualification || '-'}</span>
                           </div>
-                          <div className="space-y-1 col-span-2 mt-1">
-                             <div className="scale-90 origin-left">{getDeptBadge(staff.department)}</div>
+                          <div className="space-y-1.5 col-span-2 mt-2">
+                             <div className="scale-100 origin-left">{getDeptBadge(staff.department)}</div>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="z-10 flex items-center justify-center gap-4 mt-auto pt-4 border-t border-white/10">
+                      <div className="z-10 flex items-center justify-center gap-4 pb-2 pt-2">
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm" 
                           onClick={(e) => { e.stopPropagation(); handleEditStaff(staff); }} 
-                          className="h-8 px-4 rounded-full bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 hover:text-white border border-blue-500/30 transition-all font-bold text-xs flex items-center gap-1.5"
+                          className="h-11 px-6 rounded-full text-blue-600 border-blue-300 bg-blue-50/50 hover:bg-blue-100 hover:text-blue-700 dark:text-blue-400 dark:border-blue-800 dark:bg-blue-900/20 dark:hover:bg-blue-900/50 transition-all font-bold text-[15px] flex items-center gap-2 shadow-sm"
                         >
-                          <Edit className="w-3.5 h-3.5" />
+                          <Edit className="w-4 h-4" />
                           {locale === 'ur' ? 'ایڈٹ' : 'Edit'}
                         </Button>
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm" 
                           onClick={(e) => { e.stopPropagation(); handleDeleteStaff(staff.id, locale === 'ur' ? staff.nameUrdu : staff.nameEn); }} 
-                          className="h-8 px-4 rounded-full bg-red-500/20 text-red-300 hover:bg-red-500/40 hover:text-white border border-red-500/30 transition-all font-bold text-xs flex items-center gap-1.5"
+                          className="h-11 px-6 rounded-full text-red-600 border-red-300 bg-red-50/50 hover:bg-red-100 hover:text-red-700 dark:text-red-400 dark:border-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/50 transition-all font-bold text-[15px] flex items-center gap-2 shadow-sm"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                           {locale === 'ur' ? 'ڈیلیٹ' : 'Delete'}
                         </Button>
                       </div>
