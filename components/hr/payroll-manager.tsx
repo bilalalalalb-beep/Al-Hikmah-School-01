@@ -178,7 +178,7 @@ export function PayrollManager() {
   };
 
   // Form State
-  const [selectedStaffId, setSelectedStaffId] = useState('s4');
+  const [selectedStaffId, setSelectedStaffId] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('August 2026 / صفر المظفر 1448ھ');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [bonusAmount, setBonusAmount] = useState<number>(0);
@@ -385,6 +385,7 @@ export function PayrollManager() {
                 </div>
 
                 {/* Staff Summary Card */}
+                {selectedStaff && (
                 <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-2 text-xs">
                   <div className="flex items-center justify-between font-bold">
                     <span className="text-muted-foreground">{locale === 'ur' ? 'ایمپلائی آئی ڈی و شعبہ:' : 'Emp ID & Dept:'}</span>
@@ -398,6 +399,7 @@ export function PayrollManager() {
                     <span className="font-mono font-en text-primary">Rs. {selectedStaff.basicSalary.toLocaleString()}</span>
                   </div>
                 </div>
+                )}
 
                 {/* Select Month & Payment Date */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
