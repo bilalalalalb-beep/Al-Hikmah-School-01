@@ -36,6 +36,7 @@ export function IdCardsDesk() {
   const { settings } = usePortalSettings();
   const [expiryDate, setExpiryDate] = useState('31-03-2027');
   const [showStudentCnic, setShowStudentCnic] = useState(false);
+  const [cardLanguage, setCardLanguage] = useState<'ur' | 'en' | 'ar'>('ur');
   
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,8 +106,18 @@ export function IdCardsDesk() {
 
   // Bulk Print Logic
   
-  const getCardsDocument = (includePrintScript: boolean) => {
+  const getCardsDocument = (includePrintScript: boolean, lang: 'ur' | 'en' | 'ar' = 'ur') => {
     let cardsHtml = '';
+    
+    const labels = {
+      ur: { id: 'آئی ڈی:', studentCnic: 'ب فارم/CNIC:', father: 'والد:', fatherCnic: 'والد CNIC:', contact: 'رابطہ:', address: 'پتہ:', expiry: 'معیاد:' },
+      en: { id: 'ID:', studentCnic: 'B-Form/CNIC:', father: 'Father:', fatherCnic: 'Father CNIC:', contact: 'Contact:', address: 'Address:', expiry: 'Expiry:' },
+      ar: { id: 'رقم الهوية:', studentCnic: 'رقم الهوية الوطنية:', father: 'الأب:', fatherCnic: 'هوية الأب:', contact: 'رقم التواصل:', address: 'العنوان:', expiry: 'تاريخ الإنتهاء:' }
+    };
+    
+    const l = labels[lang] || labels['ur'];
+    const dir = (lang === 'en') ? 'ltr' : 'rtl';
+    const textAlign = (lang === 'en') ? 'left' : 'right';
     
     const studentsToPrint = students.filter(s => selectedIds.has(s.id));
     
@@ -124,18 +135,21 @@ export function IdCardsDesk() {
         ? `<img src="${settings.logo}" style="width: 100%; height: 100%; object-fit: contain;" />`
         : `<span style="font-size: 24px;">🏫</span>`;
 
+      const madrasaName = lang === 'en' ? (settings.madrasaNameEn || 'Al-Hikmah Islamic Institute') : (settings.madrasaNameUr || 'جامعہ الحکمہ الاسلامیہ و پبلک سکول');
+      const address = lang === 'en' ? (settings.addressEn || 'Near Bilal Mosque, Chenab Nagar') : (settings.addressUr || 'نزد جامع مسجد بلال، چناب نگر');
+
       cardsHtml += `
-        <div class="card-container portrait-card" dir="rtl">
+        <div class="card-container portrait-card" dir="${dir}">
           <!-- Top Section -->
           <div style="text-align: center; padding-top: 12px; position: relative; z-index: 1;">
             <div style="width: 45px; height: 45px; margin: 0 auto; background-color: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px; overflow: hidden;">
               ${logoHtml}
             </div>
             <h2 style="font-size: 11px; font-weight: bold; color: #171f27; margin: 0; padding: 0 5px; line-height: 1.4;">
-              ${settings.madrasaNameUr || 'جامعہ الحکمہ الاسلامیہ و پبلک سکول'}
+              ${madrasaName}
             </h2>
             <p style="font-size: 7px; font-weight: 500; color: #64748b; margin: 2px 0 0 0; font-family: 'Inter', sans-serif;">
-              ${settings.addressUr || 'نزد جامع مسجد بلال، چناب نگر'}
+              ${address}
             </p>
           </div>
 
@@ -150,39 +164,39 @@ export function IdCardsDesk() {
             <p style="font-size: 9px; font-weight: 500; margin: 2px 0 8px 0; color: #cbd5e1;">${classNameStr}</p>
 
             <!-- Info Grid -->
-            <div style="width: 85%; font-size: 7px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; text-align: right;">
-              <div style="font-weight: bold; color: #94a3b8;">آئی ڈی:</div>
+            <div style="width: 85%; font-size: 7px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; text-align: ${textAlign};">
+              <div style="font-weight: bold; color: #94a3b8;">${l.id}</div>
               <div>${student.registration_id}</div>
               
               ${showStudentCnic ? `
-                <div style="font-weight: bold; color: #94a3b8;">ب فارم/CNIC:</div>
+                <div style="font-weight: bold; color: #94a3b8;">${l.studentCnic}</div>
                 <div style="font-family: 'Inter', sans-serif;">${student.student_cnic || '---'}</div>
               ` : ''}
 
-              <div style="font-weight: bold; color: #94a3b8;">والد:</div>
+              <div style="font-weight: bold; color: #94a3b8;">${l.father}</div>
               <div>${student.father_name}</div>
               
               ${showFatherCnic ? `
-                <div style="font-weight: bold; color: #94a3b8;">والد CNIC:</div>
+                <div style="font-weight: bold; color: #94a3b8;">${l.fatherCnic}</div>
                 <div style="font-family: 'Inter', sans-serif;">${student.father_cnic_or_id || '---'}</div>
               ` : ''}
               
               ${showContact ? `
-                <div style="font-weight: bold; color: #94a3b8;">رابطہ:</div>
+                <div style="font-weight: bold; color: #94a3b8;">${l.contact}</div>
                 <div style="font-family: 'Inter', sans-serif;">${student.father_phone || '---'}</div>
               ` : ''}
               
-              <div style="font-weight: bold; color: #94a3b8;">پتہ:</div>
+              <div style="font-weight: bold; color: #94a3b8;">${l.address}</div>
               <div>${student.residential_address || '---'}</div>
               
               ${expiryDate ? `
-                <div style="font-weight: bold; color: #94a3b8;">معیاد:</div>
+                <div style="font-weight: bold; color: #94a3b8;">${l.expiry}</div>
                 <div style="font-family: 'Inter', sans-serif;">${expiryDate}</div>
               ` : ''}
             </div>
 
             <!-- QR Code -->
-            <div style="position: absolute; bottom: 8px; left: 8px; background-color: #fff; padding: 2px; border-radius: 4px; width: 30px; height: 30px;">
+            <div style="position: absolute; bottom: 8px; ${lang === 'en' ? 'right' : 'left'}: 8px; background-color: #fff; padding: 2px; border-radius: 4px; width: 30px; height: 30px;">
               <img src="${qrCodeUrl}" style="width: 100%; height: 100%; display: block;" />
             </div>
           </div>
@@ -192,17 +206,17 @@ export function IdCardsDesk() {
 
     return `
       <!DOCTYPE html>
-      <html lang="ur" dir="rtl">
+      <html lang="${lang}" dir="${dir}">
       <head>
         <meta charset="UTF-8">
         <title>Bulk_ID_Cards</title>
         <style>
-          @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Inter:wght@400;600;700;800&family=Noto+Sans+Arabic:wght@400;700&display=swap');
           
           @page { size: A4; margin: 10mm; }
           * { box-sizing: border-box; }
           body { 
-            font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif; 
+            font-family: ${lang === 'ar' ? "'Noto Sans Arabic'" : "'Noto Nastaliq Urdu'"}, 'Inter', sans-serif; 
             margin: 0;
             background-color: #ffffff;
             -webkit-print-color-adjust: exact;
@@ -281,7 +295,7 @@ export function IdCardsDesk() {
 
     const doc = window.open('', '_blank');
     if (doc) {
-      doc.document.write(getCardsDocument(true));
+      doc.document.write(getCardsDocument(true, cardLanguage));
       doc.document.close();
       
       setTimeout(() => {
