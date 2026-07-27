@@ -30,28 +30,12 @@ import { useLanguage } from '@/lib/i18n/context';
 import { createClient } from '@/lib/supabase/client';
 import { SalarySlipModal, SalarySlipData } from './salary-slip-modal';
 
-// Sample Fallback Data
-const samplePayrollIndex = [
-  { id: 'p1', refNo: 'SAL-2026-0001', empId: 'EMP-2026-001', staffNameUrdu: 'مفتی عبدالحکیم عثمانی', staffNameEn: 'Mufti Abdul Hakim Usmani', designationUrdu: 'مہتمم اعلیٰ و شیخ الحدیث', designationEn: 'Principal', department: 'nizami', month: 'July 2026 / محرم الحرام 1448ھ', basic: 75000, bonus: 5000, deduction: 0, net: 80000, method: 'bank', date: '2026-07-01', remarks: 'ماہانہ مشاہرہ مع عید بونس' },
-  { id: 'p2', refNo: 'SAL-2026-0002', empId: 'EMP-2026-002', staffNameUrdu: 'قاری محمد طارق مدنی', staffNameEn: 'Qari Muhammad Tariq Madani', designationUrdu: 'صدر مدرس شعبہ حفظ', designationEn: 'Head Qari', department: 'hifz', month: 'July 2026 / محرم الحرام 1448ھ', basic: 50000, bonus: 2000, deduction: 0, net: 52000, method: 'bank', date: '2026-07-01', remarks: 'ماہانہ مشاہرہ و حسن کارکردگی' },
-  { id: 'p3', refNo: 'SAL-2026-0003', empId: 'EMP-2026-003', staffNameUrdu: 'ماسٹر کاشف علی خان', staffNameEn: 'Master Kashif Ali Khan', designationUrdu: 'سینئر معلم سائنس', designationEn: 'Senior Teacher', department: 'school', month: 'July 2026 / محرم الحرام 1448ھ', basic: 48000, bonus: 0, deduction: 1000, net: 47000, method: 'cash', date: '2026-07-01', remarks: 'ایک یوم اتفاقی رخصت کی کٹوتی کے ساتھ' },
-  { id: 'p4', refNo: 'SAL-2026-0004', empId: 'EMP-2026-001', staffNameUrdu: 'مفتی عبدالحکیم عثمانی', staffNameEn: 'Mufti Abdul Hakim Usmani', designationUrdu: 'مہتمم اعلیٰ و شیخ الحدیث', designationEn: 'Principal', department: 'nizami', month: 'June 2026 / ذوالحجہ 1447ھ', basic: 75000, bonus: 0, deduction: 0, net: 75000, method: 'bank', date: '2026-06-01', remarks: 'ماہانہ مشاہرہ برائے وقت ادائیگی' },
-  { id: 'p5', refNo: 'SAL-2026-0005', empId: 'EMP-2026-002', staffNameUrdu: 'قاری محمد طارق مدنی', staffNameEn: 'Qari Muhammad Tariq Madani', designationUrdu: 'صدر مدرس شعبہ حفظ', designationEn: 'Head Qari', department: 'hifz', month: 'June 2026 / ذوالحجہ 1447ھ', basic: 50000, bonus: 0, deduction: 0, net: 50000, method: 'bank', date: '2026-06-01', remarks: 'ماہانہ مشاہرہ' },
-];
-
-const sampleStaffNames = [
-  { empId: 'EMP-2026-001', nameUrdu: 'مفتی عبدالحکیم عثمانی', nameEn: 'Mufti Abdul Hakim Usmani', dept: 'nizami' },
-  { empId: 'EMP-2026-002', nameUrdu: 'قاری محمد طارق مدنی', nameEn: 'Qari Muhammad Tariq Madani', dept: 'hifz' },
-  { empId: 'EMP-2026-003', nameUrdu: 'ماسٹر کاشف علی خان', nameEn: 'Master Kashif Ali Khan', dept: 'school' },
-  { empId: 'EMP-2026-004', nameUrdu: 'مولانا زبیر احمد قادری', nameEn: 'Maulana Zubair Ahmed Qadri', dept: 'nizami' },
-  { empId: 'EMP-2026-005', nameUrdu: 'محترمہ عائشہ صدیقہ', nameEn: 'Madam Ayesha Siddiqa', dept: 'school' },
-  { empId: 'EMP-2026-006', nameUrdu: 'بلال احمد اعوان', nameEn: 'Bilal Ahmed Awan', dept: 'admin' },
-];
+// Dummy data removed. Relying on Supabase live data.
 
 export function PayrollIndex() {
   const { locale, dir } = useLanguage();
-  const [payrollList, setPayrollList] = useState<any[]>(samplePayrollIndex);
-  const [staffList, setStaffList] = useState<any[]>(sampleStaffNames);
+  const [payrollList, setPayrollList] = useState<any[]>([]);
+  const [staffList, setStaffList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 

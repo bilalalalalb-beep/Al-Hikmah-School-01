@@ -31,27 +31,12 @@ import { useLanguage } from '@/lib/i18n/context';
 import { createClient } from '@/lib/supabase/client';
 import { SalarySlipModal, SalarySlipData } from './salary-slip-modal';
 
-// Sample Staff List for Payroll
-const initialStaffList = [
-  { id: 's1', empId: 'EMP-2026-001', nameUrdu: 'مفتی عبدالحکیم عثمانی', nameEn: 'Mufti Abdul Hakim Usmani', designationUrdu: 'مہتمم اعلیٰ و شیخ الحدیث', designationEn: 'Principal & Shaykh-ul-Hadith', department: 'nizami', basicSalary: 75000 },
-  { id: 's2', empId: 'EMP-2026-002', nameUrdu: 'قاری محمد طارق مدنی', nameEn: 'Qari Muhammad Tariq Madani', designationUrdu: 'صدر مدرس شعبہ حفظ', designationEn: 'Head Qari Hifz Dept', department: 'hifz', basicSalary: 50000 },
-  { id: 's3', empId: 'EMP-2026-003', nameUrdu: 'ماسٹر کاشف علی خان', nameEn: 'Master Kashif Ali Khan', designationUrdu: 'سینئر معلم سائنس و ریاضی', designationEn: 'Senior Science & Maths Teacher', department: 'school', basicSalary: 48000 },
-  { id: 's4', empId: 'EMP-2026-004', nameUrdu: 'مولانا زبیر احمد قادری', nameEn: 'Maulana Zubair Ahmed Qadri', designationUrdu: 'معلم درس نظامی و عربی ادب', designationEn: 'Lecturer Dars-e-Nizami', department: 'nizami', basicSalary: 45000 },
-  { id: 's5', empId: 'EMP-2026-005', nameUrdu: 'محترمہ عائشہ صدیقہ', nameEn: 'Madam Ayesha Siddiqa', designationUrdu: 'معلمہ اردو ادب و اسلامیات', designationEn: 'Senior Teacher School', department: 'school', basicSalary: 42000 },
-  { id: 's6', empId: 'EMP-2026-006', nameUrdu: 'بلال احمد اعوان', nameEn: 'Bilal Ahmed Awan', designationUrdu: 'محاسب و انچارج دفتر', designationEn: 'Accountant & Office Incharge', department: 'admin', basicSalary: 40000 },
-];
-
-// Sample Initial Paid History
-const initialPayrollHistory = [
-  { id: 'p1', refNo: 'SAL-2026-0001', empId: 'EMP-2026-001', staffNameUrdu: 'مفتی عبدالحکیم عثمانی', staffNameEn: 'Mufti Abdul Hakim Usmani', designationUrdu: 'مہتمم اعلیٰ و شیخ الحدیث', designationEn: 'Principal & Shaykh-ul-Hadith', department: 'nizami', month: 'July 2026 / محرم الحرام 1448ھ', basic: 75000, bonus: 5000, deduction: 0, net: 80000, method: 'bank', date: '2026-07-01', remarks: 'ماہانہ مشاہرہ مع عید بونس' },
-  { id: 'p2', refNo: 'SAL-2026-0002', empId: 'EMP-2026-002', staffNameUrdu: 'قاری محمد طارق مدنی', staffNameEn: 'Qari Muhammad Tariq Madani', designationUrdu: 'صدر مدرس شعبہ حفظ', designationEn: 'Head Qari Hifz Dept', department: 'hifz', month: 'July 2026 / محرم الحرام 1448ھ', basic: 50000, bonus: 2000, deduction: 0, net: 52000, method: 'bank', date: '2026-07-01', remarks: 'ماہانہ مشاہرہ و حسن کارکردگی' },
-  { id: 'p3', refNo: 'SAL-2026-0003', empId: 'EMP-2026-003', staffNameUrdu: 'ماسٹر کاشف علی خان', staffNameEn: 'Master Kashif Ali Khan', designationUrdu: 'سینئر معلم سائنس و ریاضی', designationEn: 'Senior Science & Maths Teacher', department: 'school', month: 'July 2026 / محرم الحرام 1448ھ', basic: 48000, bonus: 0, deduction: 1000, net: 47000, method: 'cash', date: '2026-07-01', remarks: 'ایک یوم اتفاقی رخصت کی کٹوتی کے ساتھ' },
-];
+// Dummy data removed. Relying on Supabase live data.
 
 export function PayrollManager() {
   const { locale } = useLanguage();
-  const [staffList, setStaffList] = useState(initialStaffList);
-  const [payrollHistory, setPayrollHistory] = useState(initialPayrollHistory);
+  const [staffList, setStaffList] = useState<any[]>([]);
+  const [payrollHistory, setPayrollHistory] = useState<any[]>([]);
   const [loadingDb, setLoadingDb] = useState(false);
   const [seedingDb, setSeedingDb] = useState(false);
   const supabase = createClient();
@@ -309,7 +294,7 @@ export function PayrollManager() {
     }
   };
 
-  const handleViewSlip = (record: typeof initialPayrollHistory[0]) => {
+  const handleViewSlip = (record: any) => {
     const slipPayload: SalarySlipData = {
       referenceNo: record.refNo,
       empId: record.empId,
