@@ -333,6 +333,20 @@ export function StaffDirectory() {
     }
   };
 
+  const getDeptCardStyle = (dept: string) => {
+    switch (dept) {
+      case 'school': return 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 hover:shadow-blue-500/20';
+      case 'hifz_nazra': return 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 hover:shadow-emerald-500/20';
+      case 'tajweed': return 'bg-teal-50/80 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800 hover:shadow-teal-500/20';
+      case 'balighan': return 'bg-orange-50/80 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800 hover:shadow-orange-500/20';
+      case 'dars_nizami': return 'bg-purple-50/80 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 hover:shadow-purple-500/20';
+      case 'takhassusat': return 'bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 hover:shadow-indigo-500/20';
+      case 'admin': return 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 hover:shadow-amber-500/20';
+      case 'support': return 'bg-slate-50/80 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 hover:shadow-slate-500/20';
+      default: return 'bg-gray-50/80 dark:bg-gray-950/40 border-gray-200 dark:border-gray-800 hover:shadow-gray-500/20';
+    }
+  };
+
   return (
     <div className="space-y-6 font-ur animate-in fade-in-50 duration-300">
       {/* KPI Stats Grid */}
@@ -471,13 +485,12 @@ export function StaffDirectory() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredStaff.map((staff) => (
-                <Card key={staff.id} className="relative overflow-hidden border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 group bg-card/60 backdrop-blur-md">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <Card key={staff.id} className={`relative overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 group backdrop-blur-md ${getDeptCardStyle(staff.department)}`}>
                   
                   <CardContent className="p-0 relative z-10">
                     <div className="flex flex-col h-full">
-                      <div className="p-4 flex items-start gap-4 border-b border-border/30 bg-gradient-to-br from-background/40 to-muted/20 group-hover:from-background/60 group-hover:to-muted/40 transition-colors duration-500">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-teal-500/20 overflow-hidden flex items-center justify-center shrink-0 border-2 border-primary/30 shadow-inner group-hover:border-primary/60 group-hover:scale-105 transition-all duration-500">
+                      <div className="p-4 flex items-start gap-4 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 group-hover:bg-white/60 dark:group-hover:bg-black/40 transition-colors duration-500">
+                        <div className="w-16 h-16 rounded-full bg-white/80 dark:bg-black/50 overflow-hidden flex items-center justify-center shrink-0 border-2 border-white/50 dark:border-white/10 shadow-sm group-hover:scale-105 transition-all duration-500">
                           {staff.photo_url ? (
                             <img src={staff.photo_url} alt={staff.nameUrdu} className="w-full h-full object-cover" />
                           ) : (
@@ -494,7 +507,7 @@ export function StaffDirectory() {
                         </div>
                       </div>
                       
-                      <div className="p-4 space-y-3 bg-card/40 group-hover:bg-card/60 transition-colors duration-500 flex-1">
+                      <div className="p-4 space-y-3 flex-1 bg-white/20 dark:bg-black/10 group-hover:bg-white/30 dark:group-hover:bg-black/20 transition-colors duration-500">
                         <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                           <Phone className="w-3.5 h-3.5 text-primary/60 shrink-0" />
                           <span className="font-mono font-en">{staff.phone}</span>
@@ -505,7 +518,7 @@ export function StaffDirectory() {
                         </div>
                       </div>
                       
-                      <div className="p-3 bg-muted/20 group-hover:bg-muted/40 transition-colors duration-500 border-t border-border/40 flex items-center justify-between">
+                      <div className="p-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between bg-white/30 dark:bg-black/30 group-hover:bg-white/50 dark:group-hover:bg-black/40 transition-colors duration-500">
                         <div className="font-mono font-en text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
                           Rs. {staff.basicSalary.toLocaleString()}
                         </div>
