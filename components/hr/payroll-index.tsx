@@ -381,10 +381,10 @@ export function PayrollIndex() {
     }
   };
 
-  // Unique lists for dropdowns
   const uniqueMonths = Array.from(new Set(payrollList.map(p => p.month))).filter(Boolean);
+  const defaultMonth = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date());
 
-  const activeMonth = filterMonth !== 'all' ? filterMonth : (uniqueMonths[0] || '');
+  const activeMonth = filterMonth !== 'all' ? filterMonth : (uniqueMonths.includes(defaultMonth) ? defaultMonth : (uniqueMonths[0] || defaultMonth));
   const paidStaffIds = payrollList.filter(p => p.month === activeMonth).map(p => p.empId);
   const pendingList = activeMonth ? staffList.filter(s => !paidStaffIds.includes(s.empId)) : [];
   
@@ -581,15 +581,15 @@ export function PayrollIndex() {
               {pendingList.length} {locale === 'ur' ? 'اساتذہ' : 'Staff'}
             </div>
             <div className="text-[10px] text-muted-foreground mt-1">
-              {locale === 'ur' ? '(اس مہینے کے لیے)' : '(for this month)'}
+              {locale === 'ur' ? `(${activeMonth} کے لیے)` : `(for ${activeMonth})`}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-md">
+        <Card className="border-2 border-red-500/40 bg-gradient-to-br from-red-600 to-red-900 text-white shadow-md">
           <CardContent className="p-4">
-            <div className="text-xs font-extrabold text-emerald-100 flex items-center justify-between">
-              <span>{locale === 'ur' ? 'کل ادا شدہ رقم (Net Disbursed)' : 'Net Paid Total'}</span>
+            <div className="text-[11px] font-extrabold text-red-100 flex items-center justify-between">
+              <span>{locale === 'ur' ? 'کل ادا شدہ تنخواہ (مدرسے کا کل خرچہ)' : 'Net Disbursed (Madrasa Expense)'}</span>
               <ShieldCheck className="w-4 h-4 text-white" />
             </div>
             <div className="text-xl sm:text-2xl font-extrabold font-mono font-en mt-1 text-white tracking-tight">

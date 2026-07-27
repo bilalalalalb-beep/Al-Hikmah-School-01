@@ -178,8 +178,9 @@ export function PayrollManager() {
   };
 
   // Form State
+  const defaultMonth = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date());
   const [selectedStaffId, setSelectedStaffId] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState('August 2026 / صفر المظفر 1448ھ');
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [bonusAmount, setBonusAmount] = useState<number>(0);
   const [deductionAmount, setDeductionAmount] = useState<number>(0);
@@ -200,9 +201,10 @@ export function PayrollManager() {
     setIsSubmitting(true);
 
     try {
-      const refNo = `SAL-2026-0${100 + payrollHistory.length + 1}`;
+      const refNo = `SAL-${new Date().getFullYear()}-0${100 + payrollHistory.length + 1}`;
       let staffDbId = selectedStaff.id;
-      if (!staffDbId || staffDbId.length !== 36) {
+      
+      if (!staffDbId) {
         const { data: found } = await (supabase as any).from('staff_members').select('id').eq('emp_id', selectedStaff.empId).limit(1);
         if (found && found.length > 0) {
           staffDbId = found[0].id;
@@ -223,7 +225,7 @@ export function PayrollManager() {
         }
       }
 
-      if (staffDbId && staffDbId.length === 36) {
+      if (staffDbId) {
         const row = {
           staff_id: staffDbId,
           salary_month: selectedMonth,
