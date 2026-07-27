@@ -268,14 +268,22 @@ export function StaffDirectory() {
     switch (dept) {
       case 'school':
         return <Badge className="bg-blue-500/15 text-blue-800 dark:text-blue-300 border-blue-500/30 text-xs font-bold">{locale === 'ur' ? 'عصری سکول' : 'Modern School'}</Badge>;
-      case 'hifz':
-        return <Badge className="bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 text-xs font-bold">{locale === 'ur' ? 'شعبہ حفظ' : 'Hifz Dept'}</Badge>;
-      case 'nizami':
+      case 'hifz_nazra':
+        return <Badge className="bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 text-xs font-bold">{locale === 'ur' ? 'حفظ و ناظرہ' : 'Hifz & Nazra'}</Badge>;
+      case 'tajweed':
+        return <Badge className="bg-teal-500/15 text-teal-800 dark:text-teal-300 border-teal-500/30 text-xs font-bold">{locale === 'ur' ? 'تجوید و قرآت' : 'Tajweed'}</Badge>;
+      case 'balighan':
+        return <Badge className="bg-orange-500/15 text-orange-800 dark:text-orange-300 border-orange-500/30 text-xs font-bold">{locale === 'ur' ? 'تعلیم بالغان' : 'Adult Edu.'}</Badge>;
+      case 'dars_nizami':
         return <Badge className="bg-purple-500/15 text-purple-800 dark:text-purple-300 border-purple-500/30 text-xs font-bold">{locale === 'ur' ? 'درس نظامی' : 'Dars-e-Nizami'}</Badge>;
+      case 'takhassusat':
+        return <Badge className="bg-indigo-500/15 text-indigo-800 dark:text-indigo-300 border-indigo-500/30 text-xs font-bold">{locale === 'ur' ? 'تخصصات' : 'Specialization'}</Badge>;
       case 'admin':
         return <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30 text-xs font-bold">{locale === 'ur' ? 'دفتری انتظام' : 'Admin & Accounts'}</Badge>;
+      case 'support':
+        return <Badge variant="secondary" className="bg-gray-500/15 text-gray-800 dark:text-gray-300 border-gray-500/30 text-xs font-bold">{locale === 'ur' ? 'معاون عملہ' : 'Support Staff'}</Badge>;
       default:
-        return <Badge variant="secondary" className="text-xs font-bold">{locale === 'ur' ? 'معاون عملہ' : 'Support Staff'}</Badge>;
+        return <Badge variant="outline" className="text-xs font-bold">{locale === 'ur' ? 'نامعلوم' : 'Unknown'}</Badge>;
     }
   };
 
@@ -301,7 +309,7 @@ export function StaffDirectory() {
             <div>
               <p className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? 'شعبہ درس نظامی و حفظ' : 'Dars-e-Nizami & Hifz'}</p>
               <h3 className="text-xl sm:text-2xl font-extrabold text-purple-700 dark:text-purple-400 font-en mt-1">
-                {staffList.filter(s => s.department === 'nizami' || s.department === 'hifz').length} Scholars
+                {staffList.filter(s => s.department === 'dars_nizami' || s.department === 'hifz_nazra' || s.department === 'takhassusat').length} Scholars
               </h3>
               <p className="text-[11px] text-purple-600 font-bold mt-1">{locale === 'ur' ? 'مفتیانِ عظام اور قراء کرام' : 'Senior Muftis and Qaris'}</p>
             </div>
@@ -391,17 +399,20 @@ export function StaffDirectory() {
             <Button onClick={() => setSelectedDept('all')} variant={selectedDept === 'all' ? 'default' : 'outline'} size="sm" className="text-xs font-bold shrink-0">
               {locale === 'ur' ? 'تمام شعبہ جات' : 'All Depts'}
             </Button>
-            <Button onClick={() => setSelectedDept('nizami')} variant={selectedDept === 'nizami' ? 'default' : 'outline'} size="sm" className="text-xs font-bold shrink-0">
+            <Button onClick={() => setSelectedDept('hifz_nazra')} variant={selectedDept === 'hifz_nazra' ? 'default' : 'outline'} size="sm" className="text-xs font-bold shrink-0">
+              {locale === 'ur' ? 'حفظ و ناظرہ' : 'Hifz'}
+            </Button>
+            <Button onClick={() => setSelectedDept('dars_nizami')} variant={selectedDept === 'dars_nizami' ? 'default' : 'outline'} size="sm" className="text-xs font-bold shrink-0">
               {locale === 'ur' ? 'درس نظامی' : 'Nizami'}
             </Button>
-            <Button onClick={() => setSelectedDept('hifz')} variant={selectedDept === 'hifz' ? 'default' : 'outline'} size="sm" className="text-xs font-bold shrink-0">
-              {locale === 'ur' ? 'شعبہ حفظ' : 'Hifz Dept'}
+            <Button onClick={() => setSelectedDept('takhassusat')} variant={selectedDept === 'takhassusat' ? 'default' : 'outline'} size="sm" className="text-xs font-bold shrink-0">
+              {locale === 'ur' ? 'تخصصات' : 'Specialization'}
             </Button>
             <Button onClick={() => setSelectedDept('school')} variant={selectedDept === 'school' ? 'default' : 'outline'} size="sm" className="text-xs font-bold shrink-0">
-              {locale === 'ur' ? 'عصری سکول' : 'Modern School'}
+              {locale === 'ur' ? 'عصری سکول' : 'School'}
             </Button>
             <Button onClick={() => setSelectedDept('admin')} variant={selectedDept === 'admin' ? 'default' : 'outline'} size="sm" className="text-xs font-bold shrink-0">
-              {locale === 'ur' ? 'دفتری انتظام' : 'Admin Staff'}
+              {locale === 'ur' ? 'دفتری و معاون' : 'Admin & Support'}
             </Button>
           </div>
         </div>
@@ -527,10 +538,14 @@ export function StaffDirectory() {
                 <Select value={newStaff.department} onValueChange={(val) => setNewStaff({ ...newStaff, department: val })}>
                   <SelectTrigger className="h-10 font-bold text-xs font-ur bg-background"><SelectValue /></SelectTrigger>
                   <SelectContent className="font-ur">
-                    <SelectItem value="nizami">{locale === 'ur' ? 'درس نظامی و تخصص' : 'Dars-e-Nizami'}</SelectItem>
-                    <SelectItem value="hifz">{locale === 'ur' ? 'شعبہ حفظ القرآن' : 'Hifz Dept'}</SelectItem>
+                    <SelectItem value="hifz_nazra">{locale === 'ur' ? 'حفظ و ناظرہ' : 'Hifz & Nazra'}</SelectItem>
+                    <SelectItem value="tajweed">{locale === 'ur' ? 'تجوید و قرآت' : 'Tajweed'}</SelectItem>
+                    <SelectItem value="balighan">{locale === 'ur' ? 'تعلیم بالغان' : 'Adult Edu.'}</SelectItem>
+                    <SelectItem value="dars_nizami">{locale === 'ur' ? 'درس نظامی' : 'Dars-e-Nizami'}</SelectItem>
+                    <SelectItem value="takhassusat">{locale === 'ur' ? 'تخصصات' : 'Specialization'}</SelectItem>
                     <SelectItem value="school">{locale === 'ur' ? 'عصری سکول' : 'Modern School'}</SelectItem>
-                    <SelectItem value="admin">{locale === 'ur' ? 'دفتری انتظام و محاسبی' : 'Admin & Accounts'}</SelectItem>
+                    <SelectItem value="admin">{locale === 'ur' ? 'دفتری انتظام' : 'Admin'}</SelectItem>
+                    <SelectItem value="support">{locale === 'ur' ? 'معاون عملہ' : 'Support Staff'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
