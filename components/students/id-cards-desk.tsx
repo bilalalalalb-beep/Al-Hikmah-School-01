@@ -103,85 +103,69 @@ export function IdCardsDesk() {
   
   const getCardsDocument = (includePrintScript: boolean) => {
     let cardsHtml = '';
+    
+    // Process selected students
     const studentsToPrint = students.filter(s => selectedIds.has(s.id));
     
     studentsToPrint.forEach(student => {
       const fullName = `${student.first_name} ${student.last_name || ''}`.trim();
       const classNameStr = getClassName(student.current_class_id);
       
-      if (orientation === 'landscape') {
-        cardsHtml += `
-          <div class="card-container landscape-card" dir="rtl">
-            <div class="ls-header">
-              <h2 class="ls-school-name">جامعہ الحکمہ الاسلامیہ و پبلک سکول</h2>
-              <div class="ls-school-sub">STUDENT IDENTITY CARD</div>
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${student.registration_id}`;
+      const photoUrl = student.photo_url || '';
+      const photoHtml = photoUrl 
+        ? `<img src="${photoUrl}" class="pt-photo" />` 
+        : `<div class="pt-photo-placeholder">👤</div>`;
+
+      cardsHtml += `
+        <div class="card-container portrait-card" dir="rtl">
+          <!-- Top Section -->
+          <div style="text-align: center; padding-top: 12px; position: relative; z-index: 1;">
+            <div style="width: 45px; height: 45px; margin: 0 auto; background-color: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+              <span style="font-size: 24px;">🏫</span>
             </div>
-            <div class="ls-body">
-              <div class="ls-watermark">🎓</div>
-              <div class="ls-photo-section">
-                ${student.photo_url ? `<img src="${student.photo_url}" class="ls-photo" />` : `<div class="ls-photo-placeholder"></div>`}
-              </div>
-              <div class="ls-details-section">
-                <h3 class="ls-name">${fullName}</h3>
-                <div class="ls-reg">${student.registration_id}</div>
-                <div class="ls-grid">
-                  <div class="ls-label">والد:</div>
-                  <div class="ls-value">${student.father_name}</div>
-                  <div class="ls-label">کلاس:</div>
-                  <div class="ls-value" style="color:#0f766e">${classNameStr}</div>
-                  ${showContact ? `
-                    <div class="ls-label">رابطہ:</div>
-                    <div class="ls-value" style="font-family:'Inter', sans-serif">${student.father_phone || '---'}</div>
-                  ` : ''}
-                  ${showBloodGroup ? `
-                    <div class="ls-label">خون:</div>
-                    <div class="ls-value" style="color:#dc2626">${student.blood_group || '---'}</div>
-                  ` : ''}
-                  ${showFatherCnic ? `
-                    <div class="ls-label" style="font-family:'Inter', sans-serif">CNIC:</div>
-                    <div class="ls-value" style="font-family:'Inter', sans-serif">${student.father_cnic_or_id || '---'}</div>
-                  ` : ''}
-                </div>
-              </div>
-            </div>
-            <div class="ls-footer">WWW.ALHIKMAH.EDU.PK</div>
+            <h2 style="font-size: 11px; font-weight: bold; color: #171f27; margin: 0; padding: 0 5px; line-height: 1.4;">
+              جامعہ الحکمہ الاسلامیہ و پبلک سکول
+            </h2>
+            <p style="font-size: 7px; font-weight: 500; color: #64748b; margin: 2px 0 0 0; font-family: 'Inter', sans-serif;">
+              نزد جامع مسجد بلال، چناب نگر
+            </p>
           </div>
-        `;
-      } else {
-        cardsHtml += `
-          <div class="card-container portrait-card" dir="rtl">
-            <div class="pt-header">
-              <h2 class="pt-school-name">جامعہ الحکمہ الاسلامیہ</h2>
-              <div class="pt-school-sub">STUDENT IDENTITY CARD</div>
-            </div>
-            <div class="pt-body">
-              <div class="ls-watermark">🎓</div>
-              ${student.photo_url ? `<img src="${student.photo_url}" class="pt-photo" />` : `<div class="pt-photo-placeholder"></div>`}
-              <h3 class="pt-name">${fullName}</h3>
-              <div class="pt-reg">${student.registration_id}</div>
-              <div class="pt-grid">
-                <div class="ls-label">والد:</div>
-                <div class="ls-value">${student.father_name}</div>
-                <div class="ls-label">کلاس:</div>
-                <div class="ls-value" style="color:#0f766e">${classNameStr}</div>
-                ${showContact ? `
-                  <div class="ls-label">رابطہ:</div>
-                  <div class="ls-value" style="font-family:'Inter', sans-serif">${student.father_phone || '---'}</div>
-                ` : ''}
-                ${showBloodGroup ? `
-                  <div class="ls-label">خون:</div>
-                  <div class="ls-value" style="color:#dc2626">${student.blood_group || '---'}</div>
-                ` : ''}
-                ${showFatherCnic ? `
-                  <div class="ls-label" style="font-family:'Inter', sans-serif">CNIC:</div>
-                  <div class="ls-value" style="font-family:'Inter', sans-serif">${student.father_cnic_or_id || '---'}</div>
-                ` : ''}
-              </div>
-            </div>
-            <div class="pt-footer">WWW.ALHIKMAH.EDU.PK</div>
+
+          <!-- Profile Picture -->
+          <div style="position: absolute; top: 34%; left: 50%; transform: translateX(-50%); width: 65px; height: 65px; border-radius: 50%; background-color: #ffffff; padding: 3px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10;">
+            ${photoHtml}
           </div>
-        `;
-      }
+
+          <!-- Bottom Section (Triangle + Rectangle) -->
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 52%; background-color: #171f27; clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 100%); display: flex; flex-direction: column; align-items: center; padding-top: 35px; color: #ffffff;">
+            <h3 style="font-size: 14px; font-weight: bold; margin: 0; line-height: 1.2;">${fullName}</h3>
+            <p style="font-size: 9px; font-weight: 500; margin: 2px 0 8px 0; color: #cbd5e1;">${classNameStr}</p>
+
+            <!-- Info Grid -->
+            <div style="width: 85%; font-size: 7px; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; text-align: right;">
+              <div style="font-weight: bold; color: #94a3b8;">آئی ڈی:</div>
+              <div>${student.registration_id}</div>
+              
+              <div style="font-weight: bold; color: #94a3b8;">والد:</div>
+              <div>${student.father_name}</div>
+              
+              ${showContact ? `
+                <div style="font-weight: bold; color: #94a3b8;">رابطہ:</div>
+                <div style="font-family: 'Inter', sans-serif;">${student.father_phone || '---'}</div>
+              ` : ''}
+              
+              <div style="font-weight: bold; color: #94a3b8;">پتہ:</div>
+              <div>${student.residential_address || '---'}</div>
+            </div>
+
+            <!-- QR Code -->
+            <div style="position: absolute; bottom: 8px; left: 8px; background-color: #fff; padding: 2px; border-radius: 4px; width: 30px; height: 30px;">
+              <img src="${qrCodeUrl}" style="width: 100%; height: 100%; display: block;" />
+            </div>
+          </div>
+        </div>
+      `;
     });
 
     return `
@@ -198,119 +182,70 @@ export function IdCardsDesk() {
           body { 
             font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif; 
             margin: 0;
+            background-color: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
             padding: 20px;
-            background-color: #f8fafc; 
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
           }
           
-          .print-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5mm;
-            align-content: flex-start;
-            justify-content: flex-start;
-          }
-
           .card-container {
-            width: ${orientation === 'landscape' ? '86mm' : '54mm'};
-            height: ${orientation === 'landscape' ? '54mm' : '86mm'};
             position: relative;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
             overflow: hidden;
-            background: white;
-            border: 1px dashed #cbd5e1;
+            break-inside: avoid;
             page-break-inside: avoid;
-            ${!includePrintScript ? 'box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);' : ''}
           }
-
-          .landscape-card {
-            display: flex; flex-direction: column;
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-          }
-          .ls-header {
-            height: 28%; background: linear-gradient(to right, #064e3b, #0f766e);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border-bottom: 3px solid #d97706;
-          }
-          .ls-school-name { font-size: 14px; font-weight: 700; margin: 0; letter-spacing: 0.5px; }
-          .ls-school-sub { font-size: 8px; opacity: 0.9; font-family: 'Inter', sans-serif; }
-          .ls-body { height: 64%; display: flex; flex-direction: row; padding: 8px 12px; gap: 15px; position: relative; }
-          .ls-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; opacity: 0.03; pointer-events: none; }
-          .ls-photo-section { width: 30%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-          .ls-photo, .ls-photo-placeholder, .pt-photo, .pt-photo-placeholder {
-            width: 20mm; height: 25mm; border: 2px solid #0f766e; border-radius: 6px; background: #e2e8f0; object-fit: cover;
-          }
-          .ls-details-section { width: 70%; display: flex; flex-direction: column; justify-content: center; padding-top: 5px; }
-          .ls-name { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 2px 0; line-height: 1; }
-          .ls-reg { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px; align-self: flex-start; }
-          .ls-grid { display: grid; grid-template-columns: 35px 1fr; gap: 4px 5px; font-size: 10px; }
-          .ls-label { font-weight: 700; color: #0f766e; }
-          .ls-value { font-weight: 700; color: #334155; }
-          .ls-footer { height: 8%; background: #0f172a; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 6px; font-family: 'Inter', sans-serif; }
-
-          .portrait-card {
-            display: flex; flex-direction: column;
-            background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
-          }
-          .pt-header {
-            height: 18%; background: linear-gradient(to right, #064e3b, #0f766e);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border-bottom: 4px solid #d97706; padding-top: 5px;
-          }
-          .pt-school-name { font-size: 13px; font-weight: 700; margin: 0; }
-          .pt-school-sub { font-size: 7px; font-family: 'Inter', sans-serif; opacity: 0.9; }
-          .pt-body { height: 76%; display: flex; flex-direction: column; align-items: center; padding: 10px; position: relative; }
-          .pt-photo, .pt-photo-placeholder {
-            width: 22mm; height: 28mm; border: 3px solid #ffffff; outline: 2px solid #0f766e; border-radius: 6px; background: #e2e8f0; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-top: 5px; margin-bottom: 8px;
-          }
-          .pt-name { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; line-height: 1.2; }
-          .pt-reg { font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 800; color: #b45309; background: #fef3c7; padding: 2px 8px; border-radius: 12px; margin-bottom: 12px; margin-top: 2px; }
-          .pt-grid { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; display: grid; grid-template-columns: 40px 1fr; gap: 6px 8px; font-size: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-          .pt-footer { height: 6%; background: #0f766e; color: white; display: flex; align-items: center; justify-content: center; font-size: 6px; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; }
-
-          .action-bar {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px dashed #cbd5e1;
-          }
-          .print-btn {
-            background: #0d9488;
-            color: #ffffff;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: 'Noto Nastaliq Urdu', serif;
-            box-shadow: 0 4px 6px rgba(13, 148, 136, 0.2);
-          }
-          .print-btn:hover { background: #0f766e; }
           
+          .portrait-card {
+            width: 54mm;
+            height: 86mm;
+            margin: 0 auto;
+          }
+
+          .pt-photo {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+          }
+          
+          .pt-photo-placeholder {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 20px;
+          }
+
           @media print {
-            body { background: white; padding: 0; }
-            .card-container { box-shadow: none; border-color: #cbd5e1; }
-            .action-bar { display: none !important; }
+            body { background-color: white; }
+            .cards-grid { padding: 0; gap: 5px; }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
           }
         </style>
       </head>
       <body>
-        ${!includePrintScript ? `
-        <div class="action-bar">
-          <button onclick="window.print()" class="print-btn">
-            🖨️ ${locale === 'ur' ? 'ان کارڈز کو پرنٹ کریں یا PDF میں محفوظ کریں' : 'Print Cards or Save as PDF'}
-          </button>
-        </div>
-        ` : ''}
-        <div class="print-grid">
+        <div class="cards-grid">
           ${cardsHtml}
         </div>
-        ${includePrintScript ? `
-        <script>
+        ${includePrintScript ? `<script>
           document.fonts.ready.then(() => {
-             window.print();
+             setTimeout(() => { window.print(); }, 1000);
           });
-        </script>
-        ` : ''}
+        </script>` : ''}
       </body>
       </html>
     `;
@@ -335,33 +270,8 @@ export function IdCardsDesk() {
     }
   };
 
-  const handleDownloadHtmlPdf = async () => {
-    if (selectedIds.size === 0) {
-      toast.error(locale === 'ur' ? 'براہ کرم پرنٹ کرنے کے لیے کم از کم ایک طالب علم کا انتخاب کریں' : 'Please select at least one student');
-      return;
-    }
-    
-    setIsGeneratingPdf(true);
-    const toastId = toast.loading(locale === 'ur' ? 'PDF بنائی جا رہی ہے، براہ کرم انتظار کریں...' : 'Generating PDF, please wait...');
-    
-    try {
-      const studentsToPrint = students.filter(s => selectedIds.has(s.id));
-      await generatePdfIdCards(
-        studentsToPrint,
-        'جامعہ الحکمہ الاسلامیہ و پبلک سکول',
-        'نزد جامع مسجد بلال، چناب نگر',
-        showContact,
-        showBloodGroup,
-        showFatherCnic,
-        getClassName
-      );
-      toast.success(locale === 'ur' ? 'کارڈز کامیابی سے ڈاؤنلوڈ ہو گئے ہیں!' : 'Cards downloaded successfully!', { id: toastId });
-    } catch (error) {
-      console.error("PDF Error:", error);
-      toast.error(locale === 'ur' ? 'کارڈز بنانے میں کوئی مسئلہ پیش آیا۔' : 'An error occurred while generating cards.', { id: toastId });
-    } finally {
-      setIsGeneratingPdf(false);
-    }
+  const handleDownloadHtmlPdf = () => {
+    handleBulkPrint();
   };
 
   const handleExportCsv = () => {
