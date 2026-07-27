@@ -488,7 +488,7 @@ export function StaffDirectory() {
               {filteredStaff.map((staff) => (
                 <div 
                   key={staff.id} 
-                  className="relative w-full h-[420px] cursor-pointer group [perspective:1000px]"
+                  className="relative w-full h-[460px] cursor-pointer group [perspective:1000px]"
                   onClick={() => setFlippedCardId(flippedCardId === staff.id ? null : staff.id)}
                 >
                   <div className={`w-full h-full relative transition-all duration-700 [transform-style:preserve-3d] ${flippedCardId === staff.id ? '[transform:rotateY(180deg)]' : ''}`}>
@@ -521,15 +521,15 @@ export function StaffDirectory() {
                     {/* Back of Card */}
                     <div className={`absolute inset-0 w-full h-full rounded-2xl p-6 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)] border shadow-sm hover:shadow-xl transition-shadow duration-500 overflow-hidden backdrop-blur-md ${getDeptCardStyle(staff.department)}`}>
                       
-                      <div className="z-10 mt-1 space-y-6">
-                        <div className="flex flex-col items-center gap-2 border-b border-border/40 pb-5">
+                      <div className="z-10 mt-1 space-y-4">
+                        <div className="flex flex-col items-center gap-2 border-b border-border/40 pb-4">
                            <span className="text-sm text-muted-foreground uppercase tracking-wider font-bold">{locale === 'ur' ? 'ماہانہ تنخواہ' : 'Monthly Salary'}</span>
                            <span className="font-mono text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 drop-shadow-sm">
                              Rs. {staff.basicSalary.toLocaleString()}
                            </span>
-                        </div>
+                         </div>
                         
-                        <div className="grid grid-cols-2 gap-5 text-start pt-2">
+                        <div className="grid grid-cols-2 gap-4 text-start pt-1">
                           <div className="space-y-1.5">
                              <span className="text-sm text-muted-foreground font-bold block">{locale === 'ur' ? 'رابطہ نمبر' : 'Phone'}</span>
                              <span className="font-mono text-[15px] font-bold text-foreground flex items-center gap-2"><Phone className="w-4 h-4 text-primary/70"/> {staff.phone}</span>
