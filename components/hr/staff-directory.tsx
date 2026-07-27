@@ -200,8 +200,27 @@ export function StaffDirectory() {
     designationUrdu: '',
     designationEn: '',
     department: 'school',
-    basicSalary: '35000'
+    basicSalary: '35000',
+    photoFile: null as File | null
   });
+
+  const uploadPhoto = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `${fileName}`;
+    
+    const { error: uploadError } = await (supabase as any).storage
+      .from('staff_photos')
+      .upload(filePath, file);
+      
+    if (uploadError) throw uploadError;
+    
+    const { data } = (supabase as any).storage
+      .from('staff_photos')
+      .getPublicUrl(filePath);
+      
+    return data.publicUrl;
+  };
 
   // Filtered List
   const filteredStaff = staffList.filter(item => {
@@ -227,6 +246,18 @@ export function StaffDirectory() {
 
     setSavingDb(true);
     const empId = `EMP-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    let photoUrl = null;
+    if (newStaff.photoFile) {
+      try {
+        toast.info(locale === 'ur' ? 'تصویر اپلوڈ کی جا رہی ہے...' : 'Uploading photo...');
+        photoUrl = await uploadPhoto(newStaff.photoFile);
+      } catch (err: any) {
+        toast.error(locale === 'ur' ? `تصویر اپلوڈ نہیں ہو سکی: ${err.message}` : `Photo upload failed: ${err.message}`);
+        setSavingDb(false);
+        return;
+      }
+    }
+
     const newEntry = {
       emp_id: empId,
       full_name_ur: newStaff.nameUrdu,
@@ -239,6 +270,7 @@ export function StaffDirectory() {
       designation_en: newStaff.designationEn || newStaff.designationUrdu,
       department: newStaff.department,
       basic_salary: Number(newStaff.basicSalary) || 35000,
+      photo_url: photoUrl,
       status: 'active'
     };
 
@@ -254,7 +286,7 @@ export function StaffDirectory() {
       } else {
         await fetchStaffFromDb();
         setAddModalOpen(false);
-        setNewStaff({ nameUrdu: '', nameEn: '', cnic: '', phone: '', qualification: '', designationUrdu: '', designationEn: '', department: 'school', basicSalary: '35000' });
+        setNewStaff({ nameUrdu: '', nameEn: '', cnic: '', phone: '', qualification: '', designationUrdu: '', designationEn: '', department: 'school', basicSalary: '35000', photoFile: null });
         toast.success(locale === 'ur' ? `🎉 الحمد للہ! نیا ملازم (${newStaff.nameUrdu}) لائیو سپا بیس ڈیٹا بیس میں مستقل محفوظ ہو گیا!` : `🎉 Staff member saved live in Supabase DB!`);
       }
     } catch (err: any) {
@@ -482,7 +514,18 @@ export function StaffDirectory() {
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                    </div>
+                      <div className="space-y-1.5 col-span-1 md:col-span-2">
+                    <Label className="text-xs font-bold text-foreground">
+                      {locale === 'ur' ? '٭ تصویر (Photo)' : 'Photo'}
+                    </Label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setNewStaff({ ...newStaff, photoFile: e.target.files?.[0] || null })}
+                      className="text-xs font-ur bg-background"
+                    />
+                  </div>
+                </div>
                   </TableCell>
                 </TableRow>
               ))}

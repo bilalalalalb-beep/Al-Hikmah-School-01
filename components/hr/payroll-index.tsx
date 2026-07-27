@@ -49,6 +49,9 @@ export function PayrollIndex() {
   // Slip Modal State
   const [slipModalOpen, setSlipModalOpen] = useState(false);
   const [activeSlipData, setActiveSlipData] = useState<SalarySlipData | null>(null);
+  
+  // Pending Salaries State
+  const [pendingModalOpen, setPendingModalOpen] = useState(false);
 
   const fetchIndexData = async () => {
     setLoading(true);
@@ -59,7 +62,8 @@ export function PayrollIndex() {
           empId: s.emp_id || 'EMP-XXXX',
           nameUrdu: s.full_name_ur || '',
           nameEn: s.full_name_en || '',
-          dept: s.department || 'school'
+          dept: s.department || 'school',
+          basicSalary: s.basic_salary || 35000
         })));
       }
 
@@ -380,6 +384,10 @@ export function PayrollIndex() {
   // Unique lists for dropdowns
   const uniqueMonths = Array.from(new Set(payrollList.map(p => p.month))).filter(Boolean);
 
+  const activeMonth = filterMonth !== 'all' ? filterMonth : (uniqueMonths[0] || '');
+  const paidStaffIds = payrollList.filter(p => p.month === activeMonth).map(p => p.empId);
+  const pendingList = activeMonth ? staffList.filter(s => !paidStaffIds.includes(s.empId)) : [];
+  
   return (
     <div className="space-y-6 font-ur animate-in fade-in-50 duration-300">
       {/* Header Banner & Print Actions */}
@@ -525,7 +533,7 @@ export function PayrollIndex() {
       </Card>
 
       {/* Summary Statistics Dashboard */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="border-2 border-primary/20 bg-primary/5 shadow-sm">
           <CardContent className="p-4">
             <div className="text-xs font-bold text-muted-foreground flex items-center justify-between">
@@ -556,6 +564,24 @@ export function PayrollIndex() {
             </div>
             <div className="text-sm sm:text-base font-extrabold font-mono font-en mt-2 flex items-center gap-2">
               <span className="text-emerald-600 dark:text-emerald-400">+{stats.totalBonus.toLocaleString()}</span> / <span className="text-destructive">-{stats.totalDeductions.toLocaleString()}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card 
+          className="border-2 border-red-500/30 bg-red-500/5 shadow-sm cursor-pointer hover:bg-red-500/10 transition-colors"
+          onClick={() => { if (pendingList.length > 0) setPendingModalOpen(true); }}
+        >
+          <CardContent className="p-4">
+            <div className="text-xs font-bold text-muted-foreground flex items-center justify-between">
+              <span>{locale === 'ur' ? 'بقایا تنخواہیں' : 'Pending Salaries'}</span>
+              <FileText className="w-4 h-4 text-red-600" />
+            </div>
+            <div className="text-xl sm:text-2xl font-extrabold font-mono font-en text-red-600 dark:text-red-400 mt-1">
+              {pendingList.length} {locale === 'ur' ? 'اساتذہ' : 'Staff'}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">
+              {locale === 'ur' ? '(اس مہینے کے لیے)' : '(for this month)'}
             </div>
           </CardContent>
         </Card>
@@ -659,6 +685,43 @@ export function PayrollIndex() {
           onClose={() => setSlipModalOpen(false)}
           slipData={activeSlipData}
         />
+      )}
+
+      {/* Pending Salaries Modal */}
+      {pendingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in-0">
+          <div className="w-full max-w-2xl bg-card rounded-2xl shadow-2xl border-2 border-destructive/20 overflow-hidden font-ur">
+            <div className="p-5 border-b border-border bg-destructive/5 flex justify-between items-center">
+              <h2 className="text-lg font-extrabold text-destructive flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                {locale === 'ur' ? `بقایا تنخواہیں برائے ماہ: ${activeMonth}` : `Pending Salaries for: ${activeMonth}`}
+              </h2>
+              <Button variant="ghost" size="sm" onClick={() => setPendingModalOpen(false)}>✕</Button>
+            </div>
+            <div className="p-5 max-h-[60vh] overflow-y-auto">
+              {pendingList.length > 0 ? (
+                <div className="space-y-3">
+                  {pendingList.map((s, idx) => (
+                    <div key={idx} className="flex justify-between items-center p-3 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <div>
+                        <div className="font-extrabold text-sm text-foreground">{locale === 'ur' ? s.nameUrdu : s.nameEn}</div>
+                        <div className="text-xs text-muted-foreground font-mono font-en">{s.empId}</div>
+                      </div>
+                      <div className="text-end">
+                        {getDeptBadge(s.dept)}
+                        <div className="text-sm font-bold text-destructive mt-1 font-mono font-en">Rs. {Number(s.basicSalary || 0).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-8 text-muted-foreground font-bold">
+                  {locale === 'ur' ? 'الحمد للہ! اس مہینے تمام اساتذہ کو تنخواہ ادا کی جا چکی ہے۔' : 'All staff members have been paid for this month.'}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
