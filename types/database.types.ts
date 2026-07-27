@@ -19,7 +19,7 @@ export type ExpenseCategory = 'salary' | 'utility' | 'food_mess' | 'maintenance'
 export type InvoiceStatus = 'paid' | 'unpaid' | 'partial' | 'waived';
 export type ExamType = 'mid_term' | 'annual' | 'monthly' | 'board_trial';
 export type GradeLevel = 'mumtaz' | 'jayyid_jiddan' | 'jayyid' | 'maqbool' | 'rasib';
-export type StaffDepartment = 'school' | 'hifz' | 'nizami' | 'admin' | 'support';
+export type StaffDepartment = 'hifz_nazra' | 'tajweed' | 'balighan' | 'dars_nizami' | 'takhassusat' | 'school' | 'admin' | 'support';
 export type EmpStatus = 'active' | 'on_leave' | 'resigned' | 'terminated';
 
 export interface Database {
