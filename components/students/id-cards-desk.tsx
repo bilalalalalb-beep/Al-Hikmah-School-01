@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useLanguage } from '@/lib/i18n/context';
+import { usePortalSettings } from '@/lib/settings/context';
 import { 
   Users, 
   Search, 
@@ -32,6 +33,9 @@ type StudentRecord = any;
 
 export function IdCardsDesk() {
   const { locale, dir } = useLanguage();
+  const { settings } = usePortalSettings();
+  const [expiryDate, setExpiryDate] = useState('31-03-2027');
+  const [showStudentCnic, setShowStudentCnic] = useState(false);
   
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,7 +108,6 @@ export function IdCardsDesk() {
   const getCardsDocument = (includePrintScript: boolean) => {
     let cardsHtml = '';
     
-    // Process selected students
     const studentsToPrint = students.filter(s => selectedIds.has(s.id));
     
     studentsToPrint.forEach(student => {
@@ -117,18 +120,22 @@ export function IdCardsDesk() {
         ? `<img src="${photoUrl}" class="pt-photo" />` 
         : `<div class="pt-photo-placeholder">👤</div>`;
 
+      const logoHtml = settings.logo 
+        ? `<img src="${settings.logo}" style="width: 100%; height: 100%; object-fit: contain;" />`
+        : `<span style="font-size: 24px;">🏫</span>`;
+
       cardsHtml += `
         <div class="card-container portrait-card" dir="rtl">
           <!-- Top Section -->
           <div style="text-align: center; padding-top: 12px; position: relative; z-index: 1;">
-            <div style="width: 45px; height: 45px; margin: 0 auto; background-color: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
-              <span style="font-size: 24px;">🏫</span>
+            <div style="width: 45px; height: 45px; margin: 0 auto; background-color: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px; overflow: hidden;">
+              ${logoHtml}
             </div>
             <h2 style="font-size: 11px; font-weight: bold; color: #171f27; margin: 0; padding: 0 5px; line-height: 1.4;">
-              جامعہ الحکمہ الاسلامیہ و پبلک سکول
+              ${settings.madrasaNameUr || 'جامعہ الحکمہ الاسلامیہ و پبلک سکول'}
             </h2>
             <p style="font-size: 7px; font-weight: 500; color: #64748b; margin: 2px 0 0 0; font-family: 'Inter', sans-serif;">
-              نزد جامع مسجد بلال، چناب نگر
+              ${settings.addressUr || 'نزد جامع مسجد بلال، چناب نگر'}
             </p>
           </div>
 
@@ -147,8 +154,18 @@ export function IdCardsDesk() {
               <div style="font-weight: bold; color: #94a3b8;">آئی ڈی:</div>
               <div>${student.registration_id}</div>
               
+              ${showStudentCnic ? `
+                <div style="font-weight: bold; color: #94a3b8;">ب فارم/CNIC:</div>
+                <div style="font-family: 'Inter', sans-serif;">${student.student_cnic || '---'}</div>
+              ` : ''}
+
               <div style="font-weight: bold; color: #94a3b8;">والد:</div>
               <div>${student.father_name}</div>
+              
+              ${showFatherCnic ? `
+                <div style="font-weight: bold; color: #94a3b8;">والد CNIC:</div>
+                <div style="font-family: 'Inter', sans-serif;">${student.father_cnic_or_id || '---'}</div>
+              ` : ''}
               
               ${showContact ? `
                 <div style="font-weight: bold; color: #94a3b8;">رابطہ:</div>
@@ -157,6 +174,11 @@ export function IdCardsDesk() {
               
               <div style="font-weight: bold; color: #94a3b8;">پتہ:</div>
               <div>${student.residential_address || '---'}</div>
+              
+              ${expiryDate ? `
+                <div style="font-weight: bold; color: #94a3b8;">معیاد:</div>
+                <div style="font-family: 'Inter', sans-serif;">${expiryDate}</div>
+              ` : ''}
             </div>
 
             <!-- QR Code -->
