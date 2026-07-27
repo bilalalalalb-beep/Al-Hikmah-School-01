@@ -58,7 +58,6 @@ export function Sidebar({ userRole, userName, userEmail, onLogout, isMobile = fa
     { title: t.navStaffRoles, href: '/admin/users', icon: UserCog, roles: ['admin'] },
     { title: t.navClassesSections, href: '/admin/classes', icon: Building2, roles: ['admin'] },
     { title: t.navAllStudents, href: '/admin/students', icon: GraduationCap, roles: ['admin'] },
-    { title: locale === 'ur' ? 'آئی ڈی کارڈز' : 'ID Cards', href: '/admin/id-cards', icon: Award, roles: ['admin'], badge: locale === 'ur' ? 'نیا' : 'New' },
     { title: t.navFinancialAnalytics, href: '/admin/finance', icon: Wallet, roles: ['admin'] },
     { title: t.navSchoolAttendance, href: '/admin/attendance', icon: CalendarCheck, roles: ['admin'] },
     { title: t.navExamsResults || (locale === 'ur' ? 'امتحانات اور نتائج' : 'Exams & Results'), href: '/admin/exams', icon: Award, roles: ['admin'] },
