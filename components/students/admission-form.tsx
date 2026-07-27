@@ -55,7 +55,7 @@ export function AdmissionForm() {
     reset,
     formState: { errors },
   } = useForm<StudentAdmissionFormValues>({
-    resolver: zodResolver(studentAdmissionSchema),
+    resolver: zodResolver(studentAdmissionSchema) as any,
     defaultValues: {
       gender: 'male',
       classId: '',
