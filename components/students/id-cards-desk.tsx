@@ -21,6 +21,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { generatePdfIdCards } from '@/lib/pdf-utils';
+import { Loader2 } from 'lucide-react';
 
 import { createClient } from '@/lib/supabase/client';
 
@@ -33,6 +35,7 @@ export function IdCardsDesk() {
   
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -332,18 +335,33 @@ export function IdCardsDesk() {
     }
   };
 
-  const handleDownloadHtmlPdf = () => {
+  const handleDownloadHtmlPdf = async () => {
     if (selectedIds.size === 0) {
       toast.error(locale === 'ur' ? 'براہ کرم پرنٹ کرنے کے لیے کم از کم ایک طالب علم کا انتخاب کریں' : 'Please select at least one student');
       return;
     }
-    const fullHtml = getCardsDocument(false);
-    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `ID_Cards_Bulk_Print_${new Date().getTime()}.html`;
-    link.click();
-    toast.success(locale === 'ur' ? 'کارڈز کی فائل ڈاؤنلوڈ ہو گئی ہے' : 'Cards file downloaded successfully');
+    
+    setIsGeneratingPdf(true);
+    const toastId = toast.loading(locale === 'ur' ? 'PDF بنائی جا رہی ہے، براہ کرم انتظار کریں...' : 'Generating PDF, please wait...');
+    
+    try {
+      const studentsToPrint = students.filter(s => selectedIds.has(s.id));
+      await generatePdfIdCards(
+        studentsToPrint,
+        'جامعہ الحکمہ الاسلامیہ و پبلک سکول',
+        'نزد جامع مسجد بلال، چناب نگر',
+        showContact,
+        showBloodGroup,
+        showFatherCnic,
+        getClassName
+      );
+      toast.success(locale === 'ur' ? 'کارڈز کامیابی سے ڈاؤنلوڈ ہو گئے ہیں!' : 'Cards downloaded successfully!', { id: toastId });
+    } catch (error) {
+      console.error("PDF Error:", error);
+      toast.error(locale === 'ur' ? 'کارڈز بنانے میں کوئی مسئلہ پیش آیا۔' : 'An error occurred while generating cards.', { id: toastId });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handleExportCsv = () => {
