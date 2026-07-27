@@ -140,7 +140,6 @@ export function AdmissionForm() {
         is_orphan: data.isOrphan || false,
         is_zakat_eligible: data.isZakatEligible || false,
         blood_group: data.bloodGroup || null,
-        b_form_number: data.bFormNumber || null,
       };
 
       const { error } = await (supabase as any).from('students').insert([newStudent]);

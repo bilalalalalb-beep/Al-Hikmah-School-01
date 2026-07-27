@@ -79,7 +79,6 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         isOrphan: studentData.is_orphan || false,
         isZakatEligible: studentData.is_zakat_eligible || false,
         bloodGroup: studentData.blood_group || '',
-        bFormNumber: studentData.b_form_number || '',
       });
     }
   }, [studentData, isOpen, reset]);
@@ -113,7 +112,6 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         is_orphan: data.isOrphan,
         is_zakat_eligible: data.isZakatEligible,
         blood_group: data.bloodGroup || null,
-        b_form_number: data.bFormNumber || null,
       };
 
       const { error } = await (supabase as any)
