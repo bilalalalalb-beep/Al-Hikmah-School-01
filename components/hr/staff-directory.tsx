@@ -489,46 +489,51 @@ export function StaffDirectory() {
                   
                   <CardContent className="p-0 relative z-10">
                     <div className="flex flex-col h-full">
-                      <div className="p-4 flex items-start gap-4 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 group-hover:bg-white/60 dark:group-hover:bg-black/40 transition-colors duration-500">
-                        <div className="w-16 h-16 rounded-full bg-white/80 dark:bg-black/50 overflow-hidden flex items-center justify-center shrink-0 border-2 border-white/50 dark:border-white/10 shadow-sm group-hover:scale-105 transition-all duration-500">
+                      <div className="p-6 flex flex-col items-center text-center border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 group-hover:bg-white/60 dark:group-hover:bg-black/40 transition-colors duration-500 relative">
+                        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                             {/* Optional empty space for balance */}
+                           </div>
+                           <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">{staff.empId}</span>
+                        </div>
+                        
+                        <div className="w-24 h-24 mt-2 mb-4 rounded-full bg-white/80 dark:bg-black/50 overflow-hidden flex items-center justify-center shrink-0 border-4 border-white/50 dark:border-white/10 shadow-md group-hover:scale-110 transition-transform duration-500 z-10">
                           {staff.photo_url ? (
                             <img src={staff.photo_url} alt={staff.nameUrdu} className="w-full h-full object-cover" />
                           ) : (
-                            <UserPlus className="w-8 h-8 text-primary/60 group-hover:text-primary transition-colors duration-500" />
+                            <UserPlus className="w-10 h-10 text-primary/60 group-hover:text-primary transition-colors duration-500" />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <h4 className="text-sm font-extrabold text-foreground truncate">{locale === 'ur' ? staff.nameUrdu : staff.nameEn}</h4>
-                            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0">{staff.empId}</span>
-                          </div>
-                          <p className="text-[11px] font-extrabold text-teal-700 dark:text-teal-400 truncate mt-0.5">{locale === 'ur' ? staff.designationUrdu : staff.designationEn}</p>
-                          <div className="mt-2">{getDeptBadge(staff.department)}</div>
+                        
+                        <div className="w-full">
+                          <h4 className="text-lg font-extrabold text-foreground truncate px-2">{locale === 'ur' ? staff.nameUrdu : staff.nameEn}</h4>
+                          <p className="text-sm font-extrabold text-teal-700 dark:text-teal-400 truncate mt-1">{locale === 'ur' ? staff.designationUrdu : staff.designationEn}</p>
+                          <div className="mt-3">{getDeptBadge(staff.department)}</div>
                         </div>
                       </div>
                       
                       <div className="p-4 space-y-3 flex-1 bg-white/20 dark:bg-black/10 group-hover:bg-white/30 dark:group-hover:bg-black/20 transition-colors duration-500">
-                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                          <Phone className="w-3.5 h-3.5 text-primary/60 shrink-0" />
+                        <div className="flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground">
+                          <Phone className="w-4 h-4 text-primary/60 shrink-0" />
                           <span className="font-mono font-en">{staff.phone}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground truncate" title={staff.qualification}>
-                          <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground truncate px-2" title={staff.qualification}>
+                          <Award className="w-4 h-4 text-amber-500 shrink-0" />
                           <span className="truncate">{staff.qualification}</span>
                         </div>
                       </div>
                       
-                      <div className="p-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between bg-white/30 dark:bg-black/30 group-hover:bg-white/50 dark:group-hover:bg-black/40 transition-colors duration-500">
-                        <div className="font-mono font-en text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
-                          Rs. {staff.basicSalary.toLocaleString()}
+                      <div className="p-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between bg-white/30 dark:bg-black/30 group-hover:bg-white/50 dark:group-hover:bg-black/40 transition-colors duration-500">
+                        <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(staff.id, locale === 'ur' ? staff.nameUrdu : staff.nameEn)} className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-full" title={locale === 'ur' ? 'ڈیلیٹ کریں' : 'Delete'}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleEditStaff(staff)} className="h-8 w-8 text-blue-600 hover:bg-blue-500/10 rounded-full" title={locale === 'ur' ? 'ایڈٹ کریں' : 'Edit'}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditStaff(staff)} className="h-7 w-7 text-blue-600 hover:bg-blue-500/10">
-                            <Edit className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(staff.id, locale === 'ur' ? staff.nameUrdu : staff.nameEn)} className="h-7 w-7 text-destructive hover:bg-destructive/10">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
+                        <div className="font-mono font-en text-base font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
+                          Rs. {staff.basicSalary.toLocaleString()}
                         </div>
                       </div>
                     </div>
