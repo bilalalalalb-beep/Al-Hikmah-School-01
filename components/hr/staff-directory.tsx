@@ -78,7 +78,8 @@ export function StaffDirectory() {
           department: row.department,
           basicSalary: Number(row.basic_salary) || 35000,
           joinDate: row.join_date || '2026-01-01',
-          status: row.status
+          status: row.status,
+          photo_url: row.photo_url
         }));
         setStaffList(mapped);
       }
@@ -140,6 +141,18 @@ export function StaffDirectory() {
     }
 
     setSavingDb(true);
+    let photoUrl = selectedStaff.photo_url;
+    if (selectedStaff.photoFile) {
+      try {
+        toast.info(locale === 'ur' ? 'نئی تصویر اپلوڈ کی جا رہی ہے...' : 'Uploading new photo...');
+        photoUrl = await uploadPhoto(selectedStaff.photoFile);
+      } catch (err: any) {
+        toast.error(locale === 'ur' ? `تصویر اپلوڈ نہیں ہو سکی: ${err.message}` : `Photo upload failed: ${err.message}`);
+        setSavingDb(false);
+        return;
+      }
+    }
+
     try {
       const { error } = await (supabase as any)
         .from('staff_members')
@@ -153,6 +166,7 @@ export function StaffDirectory() {
           designation_en: selectedStaff.designationEn || selectedStaff.designationUrdu,
           department: selectedStaff.department,
           basic_salary: Number(selectedStaff.basicSalary) || 35000,
+          photo_url: photoUrl
         })
         .eq('id', selectedStaff.id);
 
@@ -449,88 +463,65 @@ export function StaffDirectory() {
           </div>
         </div>
 
-        <CardContent className="p-0 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40">
-                <TableHead>{locale === 'ur' ? 'ایمپلائی آئی ڈی و نام' : 'EMP ID & Staff Name'}</TableHead>
-                <TableHead>{locale === 'ur' ? 'عہدہ و منصب' : 'Designation'}</TableHead>
-                <TableHead>{locale === 'ur' ? 'شعبہ' : 'Department'}</TableHead>
-                <TableHead>{locale === 'ur' ? 'تعلیمی قابلیت و تخصص' : 'Qualification & Specialization'}</TableHead>
-                <TableHead>{locale === 'ur' ? 'رابطہ و CNIC' : 'Phone & CNIC'}</TableHead>
-                <TableHead className="text-end">{locale === 'ur' ? 'بنیادی مشاہرہ (Basic)' : 'Basic Salary'}</TableHead>
-                <TableHead className="text-center">{locale === 'ur' ? 'اختیارات' : 'Actions'}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        <CardContent className="p-4 bg-muted/10">
+          {filteredStaff.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground font-bold">
+              {locale === 'ur' ? 'کوئی استاد نہیں ملا۔' : 'No staff found.'}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredStaff.map((staff) => (
-                <TableRow key={staff.id} className="hover:bg-muted/30 transition-colors">
-                  <TableCell className="font-bold py-3.5">
-                    <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary font-en block w-fit mb-1">
-                      {staff.empId}
-                    </span>
-                    <h4 className="text-sm font-extrabold text-foreground">{locale === 'ur' ? staff.nameUrdu : staff.nameEn}</h4>
-                  </TableCell>
-                  <TableCell className="text-xs font-extrabold text-teal-700 dark:text-teal-400">
-                    {locale === 'ur' ? staff.designationUrdu : staff.designationEn}
-                  </TableCell>
-                  <TableCell>
-                    {getDeptBadge(staff.department)}
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-muted-foreground max-w-xs truncate" title={staff.qualification}>
-                    <span className="flex items-center gap-1">
-                      <Award className="w-3.5 h-3.5 text-amber-500 shrink-0 inline" />
-                      <span>{staff.qualification}</span>
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-xs font-bold">
-                    <p className="font-mono font-en text-primary flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-muted-foreground" /> {staff.phone}
-                    </p>
-                    <p className="font-mono font-en text-[11px] text-muted-foreground mt-0.5">{staff.cnic}</p>
-                  </TableCell>
-                  <TableCell className="text-end font-mono font-en text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
-                    Rs. {staff.basicSalary.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditStaff(staff)}
-                        className="h-8 w-8 text-blue-600 hover:bg-blue-500/10 hover:text-blue-700 dark:text-blue-400"
-                        title={locale === 'ur' ? 'معلومات میں ترمیم کریں' : 'Edit Staff'}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteStaff(staff.id, locale === 'ur' ? staff.nameUrdu : staff.nameEn)}
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                        title={locale === 'ur' ? 'ریکارڈ حذف کریں' : 'Delete Staff'}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                      <div className="space-y-1.5 col-span-1 md:col-span-2">
-                    <Label className="text-xs font-bold text-foreground">
-                      {locale === 'ur' ? '٭ تصویر (Photo)' : 'Photo'}
-                    </Label>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setNewStaff({ ...newStaff, photoFile: e.target.files?.[0] || null })}
-                      className="text-xs font-ur bg-background"
-                    />
-                  </div>
-                </div>
-                  </TableCell>
-                </TableRow>
+                <Card key={staff.id} className="overflow-hidden border-border/60 shadow-sm hover:shadow-md transition-shadow group">
+                  <CardContent className="p-0">
+                    <div className="flex flex-col h-full">
+                      <div className="p-4 flex items-start gap-4 border-b border-border/40 bg-gradient-to-br from-background to-muted/20">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center shrink-0 border-2 border-primary/20 shadow-inner">
+                          {staff.photo_url ? (
+                            <img src={staff.photo_url} alt={staff.nameUrdu} className="w-full h-full object-cover" />
+                          ) : (
+                            <UserPlus className="w-8 h-8 text-primary/40" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="text-sm font-extrabold text-foreground truncate">{locale === 'ur' ? staff.nameUrdu : staff.nameEn}</h4>
+                            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0">{staff.empId}</span>
+                          </div>
+                          <p className="text-[11px] font-extrabold text-teal-700 dark:text-teal-400 truncate mt-0.5">{locale === 'ur' ? staff.designationUrdu : staff.designationEn}</p>
+                          <div className="mt-2">{getDeptBadge(staff.department)}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 space-y-3 bg-card flex-1">
+                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                          <Phone className="w-3.5 h-3.5 text-primary/60 shrink-0" />
+                          <span className="font-mono font-en">{staff.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground truncate" title={staff.qualification}>
+                          <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="truncate">{staff.qualification}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-muted/30 border-t border-border/60 flex items-center justify-between">
+                        <div className="font-mono font-en text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+                          Rs. {staff.basicSalary.toLocaleString()}
+                        </div>
+                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditStaff(staff)} className="h-7 w-7 text-blue-600 hover:bg-blue-500/10">
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(staff.id, locale === 'ur' ? staff.nameUrdu : staff.nameEn)} className="h-7 w-7 text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          )}
         </CardContent>
         <CardFooter className="bg-muted/30 p-4 border-t border-border/60 flex items-center justify-between">
           <span className="text-xs font-bold text-muted-foreground">
@@ -538,6 +529,131 @@ export function StaffDirectory() {
           </span>
         </CardFooter>
       </Card>
+
+      {/* Edit Staff Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[88vh] overflow-y-auto font-ur p-0 border-2 border-primary/20 shadow-2xl bg-card">
+          <DialogHeader className="p-6 bg-gradient-to-r from-primary/10 via-card to-card border-b border-border/80">
+            <DialogTitle className="text-lg sm:text-xl font-extrabold text-foreground flex items-center gap-2">
+              <Edit className="w-6 h-6 text-primary" />
+              <span>{locale === 'ur' ? 'استاد کی معلومات میں ترمیم' : 'Edit Staff Member'}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedStaff && (
+          <form onSubmit={handleUpdateStaff} className="p-6 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? '* استاد / ملازم کا مکمل نام (اردو میں)' : '* Full Name (Urdu)'}</Label>
+                <Input
+                  required
+                  value={selectedStaff.nameUrdu}
+                  onChange={(e) => setSelectedStaff({ ...selectedStaff, nameUrdu: e.target.value })}
+                  className="h-10 text-sm font-ur bg-background"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'مکمل نام (انگریزی میں)' : 'Full Name (English)'}</Label>
+                <Input
+                  value={selectedStaff.nameEn}
+                  onChange={(e) => setSelectedStaff({ ...selectedStaff, nameEn: e.target.value })}
+                  className="h-10 text-sm font-en bg-background"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? '* شعبہ منتخب کریں' : '* Select Department'}</Label>
+                <Select value={selectedStaff.department} onValueChange={(val) => setSelectedStaff({ ...selectedStaff, department: val })}>
+                  <SelectTrigger className="h-10 font-bold text-xs font-ur bg-background"><SelectValue /></SelectTrigger>
+                  <SelectContent className="font-ur">
+                    <SelectItem value="hifz_nazra">{locale === 'ur' ? 'حفظ و ناظرہ' : 'Hifz & Nazra'}</SelectItem>
+                    <SelectItem value="tajweed">{locale === 'ur' ? 'تجوید و قرآت' : 'Tajweed'}</SelectItem>
+                    <SelectItem value="balighan">{locale === 'ur' ? 'تعلیم بالغان' : 'Adult Edu.'}</SelectItem>
+                    <SelectItem value="dars_nizami">{locale === 'ur' ? 'درس نظامی' : 'Dars-e-Nizami'}</SelectItem>
+                    <SelectItem value="takhassusat">{locale === 'ur' ? 'تخصصات' : 'Specialization'}</SelectItem>
+                    <SelectItem value="school">{locale === 'ur' ? 'عصری سکول' : 'Modern School'}</SelectItem>
+                    <SelectItem value="admin">{locale === 'ur' ? 'دفتری انتظام' : 'Admin'}</SelectItem>
+                    <SelectItem value="support">{locale === 'ur' ? 'معاون عملہ' : 'Support Staff'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? '* عہدہ (اردو)' : '* Designation'}</Label>
+                <Input
+                  required
+                  value={selectedStaff.designationUrdu}
+                  onChange={(e) => setSelectedStaff({ ...selectedStaff, designationUrdu: e.target.value })}
+                  className="h-10 text-xs font-ur bg-background"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-emerald-700 dark:text-emerald-400">{locale === 'ur' ? '* بنیادی مشاہرہ (PKR)' : '* Basic Salary (PKR)'}</Label>
+                <Input
+                  type="number"
+                  required
+                  min="5000"
+                  value={selectedStaff.basicSalary}
+                  onChange={(e) => setSelectedStaff({ ...selectedStaff, basicSalary: e.target.value })}
+                  className="h-10 text-sm font-mono font-bold bg-background text-emerald-700"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? '* رابطہ فون نمبر' : '* Contact Phone'}</Label>
+                <Input
+                  required
+                  value={selectedStaff.phone}
+                  onChange={(e) => setSelectedStaff({ ...selectedStaff, phone: e.target.value })}
+                  className="h-10 text-xs font-mono font-en bg-background"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'شناختی کارڈ نمبر (CNIC)' : 'CNIC No'}</Label>
+                <Input
+                  value={selectedStaff.cnic}
+                  onChange={(e) => setSelectedStaff({ ...selectedStaff, cnic: e.target.value })}
+                  className="h-10 text-xs font-mono font-en bg-background"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'تعلیمی قابلیت و سند' : 'Qualification / Degree'}</Label>
+                <Input
+                  value={selectedStaff.qualification}
+                  onChange={(e) => setSelectedStaff({ ...selectedStaff, qualification: e.target.value })}
+                  className="h-10 text-xs font-ur bg-background"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'نئی تصویر (اگر تبدیل کرنی ہو)' : 'New Photo (optional)'}</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSelectedStaff({ ...selectedStaff, photoFile: e.target.files?.[0] || null })}
+                  className="h-10 text-xs font-ur bg-background"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 border-t border-border/80 flex flex-row items-center justify-end gap-3">
+              <Button type="button" onClick={() => setEditModalOpen(false)} variant="outline" size="sm" className="font-bold text-xs">
+                {locale === 'ur' ? 'منسوخ کریں' : 'Cancel'}
+              </Button>
+              <Button type="submit" variant="emerald" size="sm" className="font-extrabold text-xs gap-1.5 shadow-md">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{locale === 'ur' ? '💾 تبدیلیاں محفوظ کریں' : '💾 Save Changes'}</span>
+              </Button>
+            </DialogFooter>
+          </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Add Staff Modal (Compact Size) */}
       <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
@@ -642,6 +758,18 @@ export function StaffDirectory() {
                   placeholder="مثلاً: شہادۃ العالمیہ، M.A Arabic"
                   value={newStaff.qualification}
                   onChange={(e) => setNewStaff({ ...newStaff, qualification: e.target.value })}
+                  className="h-10 text-xs font-ur bg-background"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'استاد کی تصویر (Photo)' : 'Staff Photo'}</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setNewStaff({ ...newStaff, photoFile: e.target.files?.[0] || null })}
                   className="h-10 text-xs font-ur bg-background"
                 />
               </div>
