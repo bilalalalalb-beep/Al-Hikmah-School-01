@@ -73,6 +73,7 @@ export function IdCardsDesk() {
 
   const filteredStudents = students.filter(s => {
     const fullName = `${s.first_name} ${s.last_name || ''}`.trim().toLowerCase();
+    const fullNameEn = `${s.first_name_en || ''} ${s.last_name_en || ''}`.trim().toLowerCase();
     const searchMatch = !searchQuery || 
       fullName.includes(searchQuery.toLowerCase()) || 
       s.registration_id?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -123,7 +124,10 @@ export function IdCardsDesk() {
     const studentsToPrint = students.filter(s => selectedIds.has(s.id));
     
     studentsToPrint.forEach(student => {
-      const fullName = `${student.first_name} ${student.last_name || ''}`.trim();
+      const fullName = lang === 'en'
+        ? `${student.first_name_en || student.first_name} ${student.last_name_en || student.last_name || ''}`.trim()
+        : `${student.first_name} ${student.last_name || ''}`.trim();
+      const fatherName = lang === 'en' ? (student.father_name_en || student.father_name) : student.father_name;
       const classNameStr = getClassName(student.current_class_id);
       
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${student.registration_id}`;
@@ -175,7 +179,7 @@ export function IdCardsDesk() {
               ` : ''}
 
               <div style="font-weight: bold; color: #94a3b8;">${l.father}</div>
-              <div>${student.father_name}</div>
+              <div>${fatherName}</div>
               
               ${showFatherCnic ? `
                 <div style="font-weight: bold; color: #94a3b8;">${l.fatherCnic}</div>

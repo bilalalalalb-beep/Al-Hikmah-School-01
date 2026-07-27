@@ -34,6 +34,7 @@ export function ViewStudentModal({ isOpen, onClose, studentData }: ViewStudentMo
   if (!studentData) return null;
 
   const fullName = `${studentData.first_name} ${studentData.last_name || ''}`.trim();
+  const fullNameEn = `${studentData.first_name_en || ''} ${studentData.last_name_en || ''}`.trim();
 
   // Determine Class Name
   let classNameStr = 'درجہ اولیٰ';

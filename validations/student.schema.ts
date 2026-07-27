@@ -2,11 +2,14 @@ import { z } from 'zod';
 
 export const studentAdmissionSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  firstNameEn: z.string().optional(),
   lastName: z.string().optional(),
+  lastNameEn: z.string().optional(),
   gender: z.enum(['male', 'female', 'other'], { message: 'Please select gender' }),
   dateOfBirth: z.string().optional(),
   classId: z.string().min(1, 'Please assign a class / grade'),
   fatherName: z.string().min(2, "Father / Guardian's name is required"),
+  fatherNameEn: z.string().optional(),
   fatherPhone: z.string().min(10, 'Valid contact number is required'),
   fatherCnic: z.string().optional(),
   motherName: z.string().optional(),
@@ -19,7 +22,7 @@ export const studentAdmissionSchema = z.object({
   isOrphan: z.boolean().optional().default(false),
   isZakatEligible: z.boolean().optional().default(false),
   bloodGroup: z.string().optional(),
-  bFormNumber: z.string().optional(),
+  studentCnic: z.string().optional(),
   generalNotes: z.string().optional(),
 });
 

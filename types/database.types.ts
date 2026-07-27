@@ -237,6 +237,10 @@ export interface Database {
           previous_grade: string | null
           medical_history: string | null
           general_notes: string | null
+          first_name_en: string | null
+          last_name_en: string | null
+          father_name_en: string | null
+          student_cnic: string | null
           created_at: string
           updated_at: string
         }
@@ -262,6 +266,10 @@ export interface Database {
           previous_grade?: string | null
           medical_history?: string | null
           general_notes?: string | null
+          first_name_en?: string | null
+          last_name_en?: string | null
+          father_name_en?: string | null
+          student_cnic?: string | null
           created_at?: string
           updated_at?: string
         }

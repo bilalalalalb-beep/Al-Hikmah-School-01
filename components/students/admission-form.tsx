@@ -119,7 +119,9 @@ export function AdmissionForm() {
       const newStudent = {
         registration_id: generatedRegId,
         first_name: data.firstName,
+        first_name_en: data.firstNameEn || null,
         last_name: data.lastName || '',
+        last_name_en: data.lastNameEn || null,
         gender: data.gender || 'male',
         date_of_birth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : null,
         photo_url: photoPreview || null,
@@ -127,6 +129,8 @@ export function AdmissionForm() {
         admission_date: new Date().toISOString().split('T')[0],
         status: 'active',
         father_name: data.fatherName,
+        father_name_en: data.fatherNameEn || null,
+        student_cnic: data.studentCnic || null,
         father_phone: data.fatherPhone,
         father_cnic_or_id: data.fatherCnic || null,
         guardian_email: data.guardianEmail || null,
@@ -288,7 +292,7 @@ export function AdmissionForm() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="firstName" className="text-xs font-bold">{locale === 'ur' ? 'اسمِ گرامی (پہلا نام) *' : 'First Name *'}</Label>
+                <Label htmlFor="firstName" className="text-xs font-bold">{locale === 'ur' ? 'اسمِ گرامی (اردو) *' : 'First Name (Urdu) *'}</Label>
                 <Input 
                   id="firstName" 
                   placeholder={locale === 'ur' ? 'مثلاً: محمد / فاطمہ' : 'e.g. Muhammad / Fatima'} 
@@ -299,12 +303,28 @@ export function AdmissionForm() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="lastName" className="text-xs font-bold">{locale === 'ur' ? 'آخری نام / عرفیت' : 'Last Name / Surname'}</Label>
+                <Label htmlFor="firstNameEn" className="text-xs font-bold">{locale === 'ur' ? 'پہلا نام (انگریزی)' : 'First Name (English)'}</Label>
+                <Input 
+                  id="firstNameEn" 
+                  placeholder="e.g. Muhammad / Fatima" 
+                  {...register('firstNameEn')} 
+                  className="h-10 text-xs font-en text-left" 
+                  dir="ltr"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="lastName" className="text-xs font-bold">{locale === 'ur' ? 'آخری نام (اردو)' : 'Last Name (Urdu)'}</Label>
                 <Input id="lastName" placeholder={locale === 'ur' ? 'مثلاً: علی / خان' : 'e.g. Ali / Khan'} {...register('lastName')} className="h-10 text-xs font-ur" />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="lastNameEn" className="text-xs font-bold">{locale === 'ur' ? 'آخری نام (انگریزی)' : 'Last Name (English)'}</Label>
+                <Input id="lastNameEn" placeholder="e.g. Ali / Khan" {...register('lastNameEn')} className="h-10 text-xs font-en text-left" dir="ltr" />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold">{locale === 'ur' ? 'صنف (Gender) *' : 'Gender *'}</Label>
                 <Select onValueChange={(val: any) => setValue('gender', val)} defaultValue="male">
@@ -322,6 +342,11 @@ export function AdmissionForm() {
               <div className="space-y-1.5">
                 <Label htmlFor="dateOfBirth" className="text-xs font-bold">{locale === 'ur' ? 'تاریخِ پیدائش' : 'Date of Birth'}</Label>
                 <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} className="h-10 text-xs font-en text-start" />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="studentCnic" className="text-xs font-bold">{locale === 'ur' ? 'ب-فارم / CNIC' : 'Student B-Form/CNIC'}</Label>
+                <Input id="studentCnic" placeholder="35201-1234567-1" {...register('studentCnic')} className="h-10 text-xs font-en text-left" dir="ltr" />
               </div>
 
               <div className="space-y-1.5">
@@ -410,11 +435,16 @@ export function AdmissionForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="fatherName" className="text-xs font-bold">{locale === 'ur' ? 'والد / سرپرست کا نام *' : 'Father / Guardian Name *'}</Label>
+              <Label htmlFor="fatherName" className="text-xs font-bold">{locale === 'ur' ? 'والد کا نام (اردو) *' : 'Father Name (Urdu) *'}</Label>
               <Input id="fatherName" placeholder={locale === 'ur' ? 'مثلاً: عبدالرحمٰن' : 'e.g. Abdul Rahman'} {...register('fatherName')} className="h-10 text-xs font-ur" />
               {errors.fatherName && <p className="text-[11px] text-destructive">{errors.fatherName.message}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="fatherNameEn" className="text-xs font-bold">{locale === 'ur' ? 'والد کا نام (انگریزی)' : 'Father Name (English)'}</Label>
+              <Input id="fatherNameEn" placeholder="e.g. Abdul Rahman" {...register('fatherNameEn')} className="h-10 text-xs font-en text-left" dir="ltr" />
             </div>
 
             <div className="space-y-1.5">
