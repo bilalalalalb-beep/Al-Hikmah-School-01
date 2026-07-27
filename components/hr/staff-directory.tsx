@@ -471,15 +471,17 @@ export function StaffDirectory() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredStaff.map((staff) => (
-                <Card key={staff.id} className="overflow-hidden border-border/60 shadow-sm hover:shadow-md transition-shadow group">
-                  <CardContent className="p-0">
+                <Card key={staff.id} className="relative overflow-hidden border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 group bg-card/60 backdrop-blur-md">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  <CardContent className="p-0 relative z-10">
                     <div className="flex flex-col h-full">
-                      <div className="p-4 flex items-start gap-4 border-b border-border/40 bg-gradient-to-br from-background to-muted/20">
-                        <div className="w-16 h-16 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center shrink-0 border-2 border-primary/20 shadow-inner">
+                      <div className="p-4 flex items-start gap-4 border-b border-border/30 bg-gradient-to-br from-background/40 to-muted/20 group-hover:from-background/60 group-hover:to-muted/40 transition-colors duration-500">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-teal-500/20 overflow-hidden flex items-center justify-center shrink-0 border-2 border-primary/30 shadow-inner group-hover:border-primary/60 group-hover:scale-105 transition-all duration-500">
                           {staff.photo_url ? (
                             <img src={staff.photo_url} alt={staff.nameUrdu} className="w-full h-full object-cover" />
                           ) : (
-                            <UserPlus className="w-8 h-8 text-primary/40" />
+                            <UserPlus className="w-8 h-8 text-primary/60 group-hover:text-primary transition-colors duration-500" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -492,7 +494,7 @@ export function StaffDirectory() {
                         </div>
                       </div>
                       
-                      <div className="p-4 space-y-3 bg-card flex-1">
+                      <div className="p-4 space-y-3 bg-card/40 group-hover:bg-card/60 transition-colors duration-500 flex-1">
                         <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                           <Phone className="w-3.5 h-3.5 text-primary/60 shrink-0" />
                           <span className="font-mono font-en">{staff.phone}</span>
@@ -503,7 +505,7 @@ export function StaffDirectory() {
                         </div>
                       </div>
                       
-                      <div className="p-3 bg-muted/30 border-t border-border/60 flex items-center justify-between">
+                      <div className="p-3 bg-muted/20 group-hover:bg-muted/40 transition-colors duration-500 border-t border-border/40 flex items-center justify-between">
                         <div className="font-mono font-en text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
                           Rs. {staff.basicSalary.toLocaleString()}
                         </div>
