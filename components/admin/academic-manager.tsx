@@ -112,7 +112,7 @@ export function AcademicManager() {
           id: c.id,
           nameUrdu: c.name_ur || '',
           name: c.name_en || '',
-          levelType: c.level_type === 'hifz' ? 'hifz_nazra' : (c.level_type === 'dars_nizami' ? 'dars_nizami' : 'school'),
+          levelType: c.level_type || 'school',
           capacity: c.capacity || 40,
           description: c.description || ''
         })));
@@ -149,7 +149,7 @@ export function AcademicManager() {
         const classRows = initialClasses.map(c => ({
           name_ur: c.nameUrdu,
           name_en: c.name,
-          level_type: c.levelType === 'hifz_nazra' || c.levelType === 'tajweed' ? 'hifz' : (c.levelType === 'dars_nizami' || c.levelType === 'takhassusat' ? 'dars_nizami' : 'school'),
+          level_type: c.levelType,
           description: c.description,
           capacity: c.capacity
         }));
@@ -202,7 +202,7 @@ export function AcademicManager() {
       const row = {
         name_ur: newClass.nameUrdu,
         name_en: newClass.name,
-        level_type: newClass.levelType === 'hifz_nazra' || newClass.levelType === 'tajweed' ? 'hifz' : (newClass.levelType === 'dars_nizami' || newClass.levelType === 'takhassusat' ? 'dars_nizami' : 'school'),
+        level_type: newClass.levelType,
         capacity: Number(newClass.capacity) || 40,
         description: newClass.description
       };
