@@ -43,6 +43,7 @@ export function StaffDirectory() {
   const [savingDb, setSavingDb] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState('all');
+  const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -485,60 +486,93 @@ export function StaffDirectory() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredStaff.map((staff) => (
-                <Card key={staff.id} className={`relative overflow-hidden border shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 group backdrop-blur-md ${getDeptCardStyle(staff.department)}`}>
-                  
-                  <CardContent className="p-0 relative z-10">
-                    <div className="flex flex-col h-full">
-                      <div className="p-6 flex flex-col items-center text-center border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 group-hover:bg-white/60 dark:group-hover:bg-black/40 transition-colors duration-500 relative">
-                        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                             {/* Optional empty space for balance */}
-                           </div>
-                           <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">{staff.empId}</span>
-                        </div>
-                        
-                        <div className="w-24 h-24 mt-2 mb-4 rounded-full bg-white/80 dark:bg-black/50 overflow-hidden flex items-center justify-center shrink-0 border-4 border-white/50 dark:border-white/10 shadow-md group-hover:scale-110 transition-transform duration-500 z-10">
-                          {staff.photo_url ? (
-                            <img src={staff.photo_url} alt={staff.nameUrdu} className="w-full h-full object-cover" />
-                          ) : (
-                            <UserPlus className="w-10 h-10 text-primary/60 group-hover:text-primary transition-colors duration-500" />
-                          )}
-                        </div>
-                        
-                        <div className="w-full">
-                          <h4 className="text-lg font-extrabold text-foreground truncate px-2">{locale === 'ur' ? staff.nameUrdu : staff.nameEn}</h4>
-                          <p className="text-sm font-extrabold text-teal-700 dark:text-teal-400 truncate mt-1">{locale === 'ur' ? staff.designationUrdu : staff.designationEn}</p>
-                          <div className="mt-3">{getDeptBadge(staff.department)}</div>
-                        </div>
+                <div 
+                  key={staff.id} 
+                  className="relative w-full h-[340px] cursor-pointer group [perspective:1000px]"
+                  onClick={() => setFlippedCardId(flippedCardId === staff.id ? null : staff.id)}
+                >
+                  <div className={`w-full h-full relative transition-all duration-700 [transform-style:preserve-3d] ${flippedCardId === staff.id ? '[transform:rotateY(180deg)]' : ''}`}>
+                    
+                    {/* Front of Card */}
+                    <div className="absolute inset-0 w-full h-full rounded-2xl p-6 flex flex-col items-center justify-center text-center [backface-visibility:hidden] bg-gradient-to-b from-[#1E1E2F] to-[#12121A] border border-[#2E2E48] shadow-[0_8px_30px_rgba(0,0,0,0.4)] group-hover:shadow-[0_8px_30px_rgba(128,90,213,0.3)] transition-shadow duration-500 overflow-hidden">
+                      {/* Ambient Glow */}
+                      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-purple-500/10 to-transparent rounded-t-2xl"></div>
+                      
+                      <div className="absolute top-4 right-4 flex justify-end w-full pr-8">
+                         <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 z-10">{staff.empId}</span>
                       </div>
                       
-                      <div className="p-4 space-y-3 flex-1 bg-white/20 dark:bg-black/10 group-hover:bg-white/30 dark:group-hover:bg-black/20 transition-colors duration-500">
-                        <div className="flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground">
-                          <Phone className="w-4 h-4 text-primary/60 shrink-0" />
-                          <span className="font-mono font-en">{staff.phone}</span>
-                        </div>
-                        <div className="flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground truncate px-2" title={staff.qualification}>
-                          <Award className="w-4 h-4 text-amber-500 shrink-0" />
-                          <span className="truncate">{staff.qualification}</span>
-                        </div>
+                      <div className="w-28 h-28 mt-4 mb-5 rounded-full bg-black/50 overflow-hidden flex items-center justify-center shrink-0 border-2 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.4)] group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(168,85,247,0.6)] transition-all duration-500 z-10 relative">
+                        {staff.photo_url ? (
+                          <img src={staff.photo_url} alt={staff.nameUrdu} className="w-full h-full object-cover" />
+                        ) : (
+                          <UserPlus className="w-12 h-12 text-purple-400/80 group-hover:text-purple-300 transition-colors duration-500" />
+                        )}
                       </div>
                       
-                      <div className="p-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between bg-white/30 dark:bg-black/30 group-hover:bg-white/50 dark:group-hover:bg-black/40 transition-colors duration-500">
-                        <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteStaff(staff.id, locale === 'ur' ? staff.nameUrdu : staff.nameEn)} className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-full" title={locale === 'ur' ? 'ڈیلیٹ کریں' : 'Delete'}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleEditStaff(staff)} className="h-8 w-8 text-blue-600 hover:bg-blue-500/10 rounded-full" title={locale === 'ur' ? 'ایڈٹ کریں' : 'Edit'}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="font-mono font-en text-base font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
-                          Rs. {staff.basicSalary.toLocaleString()}
+                      <div className="w-full z-10 relative">
+                        <h4 className="text-xl font-extrabold text-white truncate px-2 tracking-wide drop-shadow-md">{locale === 'ur' ? staff.nameUrdu : staff.nameEn}</h4>
+                        <p className="text-sm font-bold text-purple-400 truncate mt-1.5 drop-shadow-sm">{locale === 'ur' ? staff.designationUrdu : staff.designationEn}</p>
+                        <div className="mt-4 inline-block px-3 py-1 bg-white/5 border border-white/10 rounded-full opacity-70 group-hover:opacity-100 transition-opacity">
+                           <span className="text-[11px] text-gray-300 font-bold">{locale === 'ur' ? 'مزید تفصیلات کیلئے کلک کریں' : 'Click for details'}</span>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    {/* Back of Card */}
+                    <div className="absolute inset-0 w-full h-full rounded-2xl p-6 flex flex-col justify-between text-center [backface-visibility:hidden] [transform:rotateY(180deg)] bg-gradient-to-b from-[#1E1E2F] to-[#12121A] border border-[#2E2E48] shadow-[0_8px_30px_rgba(0,0,0,0.4)] group-hover:shadow-[0_8px_30px_rgba(20,184,166,0.3)] transition-shadow duration-500 overflow-hidden">
+                      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-teal-500/10 to-transparent rounded-t-2xl"></div>
+                      
+                      <div className="z-10 text-gray-200 mt-1 space-y-4">
+                        <div className="flex flex-col items-center gap-1 border-b border-white/10 pb-3">
+                           <span className="text-[11px] text-teal-400 uppercase tracking-wider font-bold">{locale === 'ur' ? 'ماہانہ تنخواہ' : 'Monthly Salary'}</span>
+                           <span className="font-mono text-2xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]">
+                             Rs. {staff.basicSalary.toLocaleString()}
+                           </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 text-left pt-1">
+                          <div className="space-y-1">
+                             <span className="text-[10px] text-gray-400 font-bold block">{locale === 'ur' ? 'رابطہ نمبر' : 'Phone'}</span>
+                             <span className="font-mono text-xs text-white flex items-center gap-1.5"><Phone className="w-3 h-3 text-teal-500"/> {staff.phone}</span>
+                          </div>
+                          <div className="space-y-1">
+                             <span className="text-[10px] text-gray-400 font-bold block">{locale === 'ur' ? 'شناختی کارڈ' : 'CNIC'}</span>
+                             <span className="font-mono text-xs text-white">{staff.cnic}</span>
+                          </div>
+                          <div className="space-y-1 col-span-2">
+                             <span className="text-[10px] text-gray-400 font-bold block">{locale === 'ur' ? 'تعلیمی قابلیت' : 'Qualification'}</span>
+                             <span className="text-xs text-white flex items-center gap-1.5"><Award className="w-3 h-3 text-teal-500"/> {staff.qualification || '-'}</span>
+                          </div>
+                          <div className="space-y-1 col-span-2 mt-1">
+                             <div className="scale-90 origin-left">{getDeptBadge(staff.department)}</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="z-10 flex items-center justify-center gap-4 mt-auto pt-4 border-t border-white/10">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={(e) => { e.stopPropagation(); handleEditStaff(staff); }} 
+                          className="h-8 px-4 rounded-full bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 hover:text-white border border-blue-500/30 transition-all font-bold text-xs flex items-center gap-1.5"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                          {locale === 'ur' ? 'ایڈٹ' : 'Edit'}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={(e) => { e.stopPropagation(); handleDeleteStaff(staff.id, locale === 'ur' ? staff.nameUrdu : staff.nameEn); }} 
+                          className="h-8 px-4 rounded-full bg-red-500/20 text-red-300 hover:bg-red-500/40 hover:text-white border border-red-500/30 transition-all font-bold text-xs flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          {locale === 'ur' ? 'ڈیلیٹ' : 'Delete'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )}
