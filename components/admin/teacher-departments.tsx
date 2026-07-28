@@ -37,7 +37,7 @@ export function TeacherDepartments() {
         
         // Build initial selections
         const initialMap: Record<string, string[]> = {};
-        tch?.forEach(t => {
+        tch?.forEach((t: any) => {
           initialMap[t.id] = td.filter((x: any) => x.teacher_id === t.id).map((x: any) => x.department_id);
         });
         setSelections(initialMap);
