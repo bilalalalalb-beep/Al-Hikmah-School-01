@@ -22,6 +22,8 @@ import {
 import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
 import { createClient } from '@/lib/supabase/client';
+import { AttendanceSlipModal, AttendanceSlipData } from './attendance-slip-modal';
+
 export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' }) {
   const { locale, t } = useLanguage();
   const [selectedClass, setSelectedClass] = useState<string>('');
@@ -35,6 +37,8 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [totalSchoolDays, setTotalSchoolDays] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [isSlipOpen, setIsSlipOpen] = useState(false);
+  const [slipData, setSlipData] = useState<AttendanceSlipData | null>(null);
   const supabase = createClient();
 
   React.useEffect(() => {
@@ -149,8 +153,29 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
     : 0;
 
   const handlePrintReport = () => {
-    toast.success(locale === 'ur' ? '🖨️ ماہانہ حاضری رپورٹ پرنٹ کے لیے تیار کی جا رہی ہے...' : '🖨️ Preparing monthly report for printing...');
-    window.print();
+    if (selectedStudent !== 'all' && filteredData.length === 1) {
+      const student = filteredData[0];
+      const cls = classList.find(c => c.id === selectedClass);
+      
+      setSlipData({
+        regId: student.regId,
+        studentNameUrdu: student.nameUrdu,
+        studentNameEn: student.name,
+        classNameUrdu: cls?.name_ur || '',
+        classNameEn: cls?.name_en || '',
+        month: selectedMonth,
+        totalDays: totalSchoolDays,
+        present: student.present,
+        absent: student.absent,
+        leave: student.leave,
+        late: student.late,
+        percentage: student.percentage
+      });
+      setIsSlipOpen(true);
+    } else {
+      toast.success(locale === 'ur' ? '🖨️ ماہانہ حاضری رپورٹ پرنٹ کے لیے تیار کی جا رہی ہے...' : '🖨️ Preparing monthly report for printing...');
+      window.print();
+    }
   };
 
   const handleExportCSV = () => {
@@ -369,81 +394,11 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
         </CardFooter>
       </Card>
 
-      {/* Printable Slip for Single Student (Visible only on Print) */}
-      {selectedStudent !== 'all' && filteredData.length === 1 && (
-        <div className="hidden print:block font-ur p-8">
-          <div className="border-2 border-primary/20 rounded-xl p-8 max-w-3xl mx-auto">
-            {/* Header */}
-            <div className="text-center space-y-2 mb-8 border-b-2 border-primary/10 pb-6">
-              <h1 className="text-3xl font-extrabold text-primary">جامعہ الحکمہ (Al-Hikmah School)</h1>
-              <h2 className="text-xl font-bold text-foreground">طالب علم ماہانہ حاضری سلپ (Attendance Slip)</h2>
-              <p className="text-sm font-bold text-muted-foreground">
-                مہینہ: {selectedMonth} | 
-                کلاس: {classList.find(c => c.id === selectedClass)?.name_ur || ''}
-              </p>
-            </div>
-
-            {/* Student Info */}
-            <div className="grid grid-cols-2 gap-6 mb-8 bg-muted/30 p-6 rounded-lg">
-              <div>
-                <p className="text-sm text-muted-foreground font-bold">نام طالب علم (Student Name)</p>
-                <p className="text-xl font-extrabold mt-1">{filteredData[0].nameUrdu}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-bold">رجسٹریشن نمبر (Reg No)</p>
-                <p className="text-xl font-extrabold font-en mt-1">{filteredData[0].regId}</p>
-              </div>
-            </div>
-
-            {/* Attendance Stats Grid */}
-            <div className="grid grid-cols-4 gap-4 mb-10">
-              <div className="border-2 border-emerald-500/20 bg-emerald-500/5 p-4 rounded-xl text-center">
-                <p className="text-sm font-bold text-emerald-700">حاضر</p>
-                <p className="text-3xl font-extrabold font-en text-emerald-600 mt-2">{filteredData[0].present}</p>
-              </div>
-              <div className="border-2 border-rose-500/20 bg-rose-500/5 p-4 rounded-xl text-center">
-                <p className="text-sm font-bold text-rose-700">غیر حاضر</p>
-                <p className="text-3xl font-extrabold font-en text-rose-600 mt-2">{filteredData[0].absent}</p>
-              </div>
-              <div className="border-2 border-amber-500/20 bg-amber-500/5 p-4 rounded-xl text-center">
-                <p className="text-sm font-bold text-amber-700">رخصت</p>
-                <p className="text-3xl font-extrabold font-en text-amber-600 mt-2">{filteredData[0].leave}</p>
-              </div>
-              <div className="border-2 border-primary/20 bg-primary/5 p-4 rounded-xl text-center">
-                <p className="text-sm font-bold text-primary">کل ایام</p>
-                <p className="text-3xl font-extrabold font-en text-primary mt-2">{totalSchoolDays}</p>
-              </div>
-            </div>
-
-            {/* Percentage & Status */}
-            <div className="flex items-center justify-between border-t-2 border-primary/10 pt-6 px-4">
-              <div>
-                <p className="text-sm font-bold text-muted-foreground mb-1">تناسب حاضری (%)</p>
-                <p className="text-3xl font-extrabold font-en">{filteredData[0].percentage}%</p>
-              </div>
-              <div className="text-end">
-                <p className="text-sm font-bold text-muted-foreground mb-1">کیفیت (Status)</p>
-                <p className={`text-2xl font-extrabold ${filteredData[0].percentage >= 75 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {filteredData[0].percentage >= 90 ? 'بہترین (Excellent)' : 
-                   filteredData[0].percentage >= 75 ? 'تسلی بخش (Satisfactory)' : 'کم حاضری وارننگ (Warning)'}
-                </p>
-              </div>
-            </div>
-
-            {/* Signatures */}
-            <div className="flex justify-between items-end mt-24 px-8">
-              <div className="text-center">
-                <div className="w-40 border-b-2 border-black/40 mb-2"></div>
-                <p className="font-bold text-sm">دستخط استاد (Teacher)</p>
-              </div>
-              <div className="text-center">
-                <div className="w-40 border-b-2 border-black/40 mb-2"></div>
-                <p className="font-bold text-sm">دستخط پرنسپل (Principal)</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AttendanceSlipModal 
+        isOpen={isSlipOpen} 
+        onClose={() => setIsSlipOpen(false)} 
+        slipData={slipData} 
+      />
     </div>
   );
 }
