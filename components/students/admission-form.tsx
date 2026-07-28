@@ -44,8 +44,10 @@ interface OnlineAdmissionRequest {
 export function AdmissionForm() {
   const [submitting, setSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [generatedRegId, setGeneratedRegId] = useState<string>("REG-2026-0483");
+  const [generatedRegId, setGeneratedRegId] = useState<string>("");
   const [onlineRequests, setOnlineRequests] = useState<OnlineAdmissionRequest[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [selectedDept, setSelectedDept] = useState<string>('dars_nizami');
   const { locale, t } = useLanguage();
 
   const {
@@ -63,6 +65,14 @@ export function AdmissionForm() {
   });
 
   useEffect(() => {
+    const fetchClasses = async () => {
+      const supabase = createClient();
+      const { data } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
+      if (data) setClasses(data);
+    };
+    fetchClasses();
+    setGeneratedRegId(`REG-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`);
+
     try {
       const saved = localStorage.getItem('alhikmah_online_admissions');
       if (saved) {
@@ -107,14 +117,6 @@ export function AdmissionForm() {
   const onSubmit = async (data: StudentAdmissionFormValues) => {
     setSubmitting(true);
     try {
-      const classIdMap: Record<string, string> = {
-        "1": "11111111-1111-1111-1111-111111111101",
-        "2": "11111111-1111-1111-1111-111111111102",
-        "3": "11111111-1111-1111-1111-111111111103",
-        "4": "11111111-1111-1111-1111-111111111104",
-        "5": "11111111-1111-1111-1111-111111111105",
-      };
-
       const supabase = createClient();
       const newStudent = {
         registration_id: generatedRegId,
@@ -125,7 +127,7 @@ export function AdmissionForm() {
         gender: data.gender || 'male',
         date_of_birth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : null,
         photo_url: photoPreview || null,
-        current_class_id: classIdMap[data.classId] || null,
+        current_class_id: data.classId || null,
         admission_date: new Date().toISOString().split('T')[0],
         status: 'active',
         father_name: data.fatherName,
@@ -153,8 +155,7 @@ export function AdmissionForm() {
         );
         reset();
         setPhotoPreview(null);
-        const nextNum = Math.floor(1000 + Math.random() * 9000);
-        setGeneratedRegId(`REG-2026-${nextNum}`);
+        setGeneratedRegId(`REG-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`);
       }
     } catch (err: any) {
       toast.error(err.message || 'Error occurred');
@@ -323,7 +324,7 @@ export function AdmissionForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold">{locale === 'ur' ? 'صنف (Gender) *' : 'Gender *'}</Label>
                 <Select onValueChange={(val: any) => setValue('gender', val)} defaultValue="male">
@@ -349,17 +350,34 @@ export function AdmissionForm() {
               </div>
 
               <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'شعبہ (Department) *' : 'Department *'}</Label>
+                <Select onValueChange={(val) => { setSelectedDept(val); setValue('classId', ''); }} value={selectedDept}>
+                  <SelectTrigger className="w-full h-10 text-xs font-ur">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="font-ur">
+                    <SelectItem value="dars_nizami">{locale === 'ur' ? 'درس نظامی' : 'Dars-e-Nizami'}</SelectItem>
+                    <SelectItem value="hifz">{locale === 'ur' ? 'شعبہ حفظ' : 'Hifz Dept'}</SelectItem>
+                    <SelectItem value="school">{locale === 'ur' ? 'عصری سکول' : 'Modern School'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
                 <Label className="text-xs font-bold">{locale === 'ur' ? 'درجہ / کلاس منتخب کریں *' : 'Assign Class / Grade *'}</Label>
                 <Select onValueChange={(val) => setValue('classId', val)}>
                   <SelectTrigger className={`w-full h-10 text-xs font-ur ${errors.classId ? "border-destructive" : ""}`}>
                     <SelectValue placeholder={locale === 'ur' ? 'درجہ منتخب کریں...' : 'Select grade...'} />
                   </SelectTrigger>
                   <SelectContent className="font-ur">
-                    <SelectItem value="1">{locale === 'ur' ? 'درجہ اول - الف' : 'Grade 1 - Section A'}</SelectItem>
-                    <SelectItem value="2">{locale === 'ur' ? 'درجہ پنجم - صبح' : 'Grade 5 - Morning'}</SelectItem>
-                    <SelectItem value="3">{locale === 'ur' ? 'درجہ دہم (سائنس)' : 'Grade 10 - Science'}</SelectItem>
-                    <SelectItem value="4">{locale === 'ur' ? 'حفظ القرآن - سیکشن الف' : 'Hifz al-Quran - Section A'}</SelectItem>
-                    <SelectItem value="5">{locale === 'ur' ? 'درس نظامی سال اول' : 'Dars-e-Nizami Year 1'}</SelectItem>
+                    {classes.filter(c => c.level_type === selectedDept).map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {locale === 'ur' ? c.name_ur : c.name_en}
+                      </SelectItem>
+                    ))}
+                    {classes.filter(c => c.level_type === selectedDept).length === 0 && (
+                       <SelectItem value="none" disabled>{locale === 'ur' ? 'اس شعبے میں کوئی درجہ نہیں' : 'No classes in this dept'}</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 {errors.classId && <p className="text-[11px] text-destructive">{errors.classId.message}</p>}

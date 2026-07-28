@@ -45,19 +45,26 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
     resolver: zodResolver(studentAdmissionSchema) as any,
   });
 
+  const [classes, setClasses] = useState<any[]>([]);
+  const [selectedDept, setSelectedDept] = useState<string>('dars_nizami');
+
   const isOrphan = watch('isOrphan');
   const isZakatEligible = watch('isZakatEligible');
 
   useEffect(() => {
+    const fetchClasses = async () => {
+      const { data } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
+      if (data) setClasses(data);
+    };
+    fetchClasses();
+  }, []);
+
+  useEffect(() => {
     if (studentData && isOpen) {
-      // Map existing classId to form
-      let mappedClassId = '';
-      if (studentData.current_class_id === '11111111-1111-1111-1111-111111111101') mappedClassId = '1';
-      else if (studentData.current_class_id === '11111111-1111-1111-1111-111111111102') mappedClassId = '2';
-      else if (studentData.current_class_id === '11111111-1111-1111-1111-111111111103') mappedClassId = '3';
-      else if (studentData.current_class_id === '11111111-1111-1111-1111-111111111104') mappedClassId = '4';
-      else if (studentData.current_class_id === '11111111-1111-1111-1111-111111111105') mappedClassId = '5';
-      else mappedClassId = '1'; // Default fallback
+      if (studentData.current_class_id && classes.length > 0) {
+        const cls = classes.find((c: any) => c.id === studentData.current_class_id);
+        if (cls) setSelectedDept(cls.level_type);
+      }
 
       reset({
         firstName: studentData.first_name || '',
@@ -66,7 +73,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         lastNameEn: studentData.last_name_en || '',
         gender: studentData.gender || 'male',
         dateOfBirth: studentData.date_of_birth ? new Date(studentData.date_of_birth).toISOString().split('T')[0] : '',
-        classId: mappedClassId,
+        classId: studentData.current_class_id || '',
         fatherName: studentData.father_name || '',
         fatherNameEn: studentData.father_name_en || '',
         studentCnic: studentData.student_cnic || '',
@@ -81,25 +88,17 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         bloodGroup: studentData.blood_group || '',
       });
     }
-  }, [studentData, isOpen, reset]);
+  }, [studentData, isOpen, reset, classes]);
 
   const onSubmit = async (data: any) => {
     setSubmitting(true);
     try {
-      const classIdMap: Record<string, string> = {
-        "1": "11111111-1111-1111-1111-111111111101",
-        "2": "11111111-1111-1111-1111-111111111102",
-        "3": "11111111-1111-1111-1111-111111111103",
-        "4": "11111111-1111-1111-1111-111111111104",
-        "5": "11111111-1111-1111-1111-111111111105",
-      };
-
       const updatedStudent = {
         first_name: data.firstName,
         last_name: data.lastName || null,
         gender: data.gender,
         date_of_birth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : null,
-        current_class_id: classIdMap[data.classId] || null,
+        current_class_id: data.classId || null,
         father_name: data.fatherName,
         father_name_en: data.fatherNameEn || null,
         student_cnic: data.studentCnic || null,
@@ -179,17 +178,34 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
               </div>
 
               <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'شعبہ (Department) *' : 'Department *'}</Label>
+                <Select onValueChange={(val) => { setSelectedDept(val); setValue('classId', ''); }} value={selectedDept}>
+                  <SelectTrigger className="w-full h-10 text-xs font-ur">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="font-ur">
+                    <SelectItem value="dars_nizami">{locale === 'ur' ? 'درس نظامی' : 'Dars-e-Nizami'}</SelectItem>
+                    <SelectItem value="hifz">{locale === 'ur' ? 'شعبہ حفظ' : 'Hifz Dept'}</SelectItem>
+                    <SelectItem value="school">{locale === 'ur' ? 'عصری سکول' : 'Modern School'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
                 <Label className="text-xs font-bold">{locale === 'ur' ? 'موجودہ درجہ / کلاس *' : 'Current Class *'}</Label>
                 <Select onValueChange={(val) => setValue('classId', val)} value={watch('classId')}>
                   <SelectTrigger className={`w-full h-10 text-xs font-ur ${errors.classId ? "border-destructive" : ""}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="font-ur">
-                    <SelectItem value="1">{locale === 'ur' ? 'درجہ اول - الف' : 'Grade 1 - Section A'}</SelectItem>
-                    <SelectItem value="2">{locale === 'ur' ? 'درجہ پنجم - صبح' : 'Grade 5 - Morning'}</SelectItem>
-                    <SelectItem value="3">{locale === 'ur' ? 'درجہ دہم (سائنس)' : 'Grade 10 - Science'}</SelectItem>
-                    <SelectItem value="4">{locale === 'ur' ? 'حفظ القرآن - سیکشن الف' : 'Hifz al-Quran - Section A'}</SelectItem>
-                    <SelectItem value="5">{locale === 'ur' ? 'درس نظامی سال اول' : 'Dars-e-Nizami Year 1'}</SelectItem>
+                    {classes.filter(c => c.level_type === selectedDept).map(c => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {locale === 'ur' ? c.name_ur : c.name_en}
+                      </SelectItem>
+                    ))}
+                    {classes.filter(c => c.level_type === selectedDept).length === 0 && (
+                       <SelectItem value="none" disabled>{locale === 'ur' ? 'اس شعبے میں کوئی درجہ نہیں' : 'No classes in this dept'}</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 {errors.classId && <p className="text-[11px] text-destructive">{errors.classId.message}</p>}
