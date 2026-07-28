@@ -56,11 +56,34 @@ const initialStaffUsers: StaffUserItem[] = [
   { id: '7', nameUrdu: 'حافظ سعد صاحب', nameEn: 'Hafiz Saad', email: 'saad@alhikmah.edu', phone: '0332-1122339', role: 'teacher', departmentUrdu: 'شعبہ حفظ و ناظرہ', departmentEn: 'Hifz Section', joinDate: '2024-01-01', status: 'active' },
 ];
 
+import { createClient } from '@/lib/supabase/client';
+
 export default function StaffRolesAndPromotionPage() {
   const { locale } = useLanguage();
-  const [users, setUsers] = useState<StaffUserItem[]>(initialStaffUsers);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'switching' | 'permissions'>('switching');
+  
+  // Fetch profiles on load
+  React.useEffect(() => {
+    fetchProfiles();
+  }, []);
+
+  const fetchProfiles = async () => {
+    try {
+      setLoading(true);
+      const supabase = createClient();
+      const { data, error } = await (supabase as any).from('profiles').select('*').order('created_at', { ascending: false });
+      if (data) {
+        setUsers(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Promotion Dialog State
   const [promoDialogOpen, setPromoDialogOpen] = useState(false);
@@ -100,34 +123,31 @@ export default function StaffRolesAndPromotionPage() {
     setPromoDialogOpen(true);
   };
 
-  const handleConfirmPromotion = () => {
+  const handleConfirmPromotion = async () => {
     if (!selectedUser) return;
     setIsSubmittingPromo(true);
 
-    setTimeout(() => {
-      const today = new Date().toISOString().split('T')[0];
-      setUsers((prev) =>
-        prev.map((u) => {
-          if (u.id === selectedUser.id) {
-            return {
-              ...u,
-              role: targetRole,
-              lastPromoted: today,
-            };
-          }
-          return u;
-        })
-      );
-
+    try {
+      const supabase = createClient();
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ role: targetRole })
+        .eq('id', selectedUser.id);
+        
+      if (error) throw error;
+      
       toast.success(
         locale === 'ur'
-          ? `ماشاء اللہ! ${selectedUser.nameUrdu} کا رول کامیابی کے ساتھ تبدیل کر کے نیا عہدہ الاٹ کر دیا گیا ہے!`
-          : `Success! ${selectedUser.nameEn}'s role has been promoted/updated successfully.`
+          ? `ماشاء اللہ! ${selectedUser.full_name} کا رول کامیابی کے ساتھ تبدیل کر کے نیا عہدہ الاٹ کر دیا گیا ہے!`
+          : `Success! Role has been updated successfully.`
       );
-
-      setIsSubmittingPromo(false);
+      await fetchProfiles();
       setPromoDialogOpen(false);
-    }, 600);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update role");
+    } finally {
+      setIsSubmittingPromo(false);
+    }
   };
 
   const handleTogglePermission = (role: UserRole, key: string) => {
@@ -154,10 +174,9 @@ export default function StaffRolesAndPromotionPage() {
 
   const filteredUsers = users.filter(
     (u) =>
-      u.nameUrdu.includes(searchQuery) ||
-      u.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.departmentUrdu.includes(searchQuery)
+      u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.phone?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -248,10 +267,10 @@ export default function StaffRolesAndPromotionPage() {
                     <TableRow key={u.id} className="hover:bg-muted/30 transition-colors">
                       <TableCell className="py-4">
                         <div className="font-extrabold text-sm text-foreground">
-                          {locale === 'ur' ? u.nameUrdu : u.nameEn}
+                          {u.full_name}
                         </div>
                         <div className="text-[11px] text-muted-foreground mt-0.5 font-medium">
-                          {locale === 'ur' ? u.departmentUrdu : u.departmentEn}
+                          {locale === 'ur' ? 'اکاؤنٹ آن لائن' : 'Online Profile'}
                         </div>
                       </TableCell>
 
@@ -265,14 +284,7 @@ export default function StaffRolesAndPromotionPage() {
                       </TableCell>
 
                       <TableCell className="py-4 text-center font-en text-xs text-muted-foreground">
-                        {u.lastPromoted ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                            <Clock className="w-3 h-3" />
-                            {u.lastPromoted}
-                          </span>
-                        ) : (
-                          <span>{u.joinDate} (Join)</span>
-                        )}
+                        <span>{u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A'}</span>
                       </TableCell>
 
                       <TableCell className="py-4 text-end">
@@ -440,7 +452,7 @@ export default function StaffRolesAndPromotionPage() {
             <div className="space-y-4 py-3">
               <div className="p-3.5 rounded-2xl bg-muted/50 border border-border flex items-center justify-between">
                 <div>
-                  <div className="text-xs font-extrabold text-foreground">{locale === 'ur' ? selectedUser.nameUrdu : selectedUser.nameEn}</div>
+                  <div className="text-xs font-extrabold text-foreground">{selectedUser.full_name}</div>
                   <div className="text-[11px] text-muted-foreground mt-0.5">{selectedUser.email}</div>
                 </div>
                 <div className="text-end">
