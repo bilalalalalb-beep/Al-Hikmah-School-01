@@ -56,6 +56,7 @@ export function AdmissionForm() {
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors },
   } = useForm<StudentAdmissionFormValues>({
     resolver: zodResolver(studentAdmissionSchema) as any,
