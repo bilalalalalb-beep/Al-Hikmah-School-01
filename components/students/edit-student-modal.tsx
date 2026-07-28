@@ -133,7 +133,6 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
       toast.success(locale === 'ur' ? '🎉 طالب علم کا ریکارڈ کامیابی سے اپڈیٹ ہو گیا!' : 'Student record updated successfully!');
       onSuccess();
       onClose();
-      }
     } catch (err: any) {
       toast.error(err.message || 'Error updating student record');
     } finally {
