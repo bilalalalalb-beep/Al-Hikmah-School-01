@@ -29,6 +29,7 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [selectedStudent, setSelectedStudent] = useState<string>('all');
 
   const [classList, setClassList] = useState<any[]>([]);
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
@@ -141,8 +142,10 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
     fetchData();
   }, [selectedClass, selectedMonth]);
 
-  const averageAttendance = monthlyData.length > 0
-    ? Math.round(monthlyData.reduce((acc, curr) => acc + curr.percentage, 0) / monthlyData.length)
+  const filteredData = selectedStudent === 'all' ? monthlyData : monthlyData.filter((s: any) => s.id === selectedStudent);
+
+  const averageAttendance = filteredData.length > 0
+    ? Math.round(filteredData.reduce((acc: any, curr: any) => acc + curr.percentage, 0) / filteredData.length)
     : 0;
 
   const handlePrintReport = () => {
@@ -158,9 +161,9 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
     <div className="space-y-6 font-ur">
       {/* Top Filter Bar */}
       <Card className="border-border/60 shadow-sm bg-card/95 backdrop-blur-md">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full sm:w-auto">
+        <CardContent className="p-4 sm:p-6 print:hidden">
+          <div className="flex flex-col xl:flex-row items-center justify-between gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full xl:w-auto">
               <div className="space-y-1.5">
                 <span className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? 'درجہ / کلاس' : 'Select Class'}</span>
                 <Select value={selectedClass} onValueChange={setSelectedClass}>
@@ -189,16 +192,29 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-1.5">
+                <span className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? 'طالب علم منتخب کریں' : 'Select Student'}</span>
+                <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                  <SelectTrigger className="h-10 text-xs sm:text-sm font-bold font-ur w-full sm:w-48 bg-background"><SelectValue /></SelectTrigger>
+                  <SelectContent className="font-ur">
+                    <SelectItem value="all">{locale === 'ur' ? 'تمام طلباء (All Students)' : 'All Students'}</SelectItem>
+                    {monthlyData.map((s: any) => (
+                      <SelectItem key={s.id} value={s.id}>{s.regId} - {locale === 'ur' ? s.nameUrdu : s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
               <Button onClick={handleExportCSV} variant="outline" size="sm" className="font-bold text-xs gap-1.5 shadow-sm">
                 <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{locale === 'ur' ? 'ایکسل (Excel/CSV) ڈاؤن لوڈ' : 'Export CSV'}</span>
+                <span>{locale === 'ur' ? 'ایکسل' : 'Export'}</span>
               </Button>
               <Button onClick={handlePrintReport} variant="secondary" size="sm" className="font-bold text-xs gap-1.5 shadow-sm">
                 <Printer className="w-4 h-4 text-primary shrink-0" />
-                <span>{locale === 'ur' ? 'پرنٹ کریں (Print Sheet)' : 'Print Report'}</span>
+                <span>{selectedStudent === 'all' ? (locale === 'ur' ? 'مکمل رپورٹ پرنٹ' : 'Print Sheet') : (locale === 'ur' ? 'رسید / سلپ پرنٹ' : 'Print Slip')}</span>
               </Button>
             </div>
           </div>
@@ -206,7 +222,7 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
       </Card>
 
       {/* Analytics Highlights Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 print:hidden">
         <Card className="border-border/60 shadow-sm bg-gradient-to-br from-emerald-500/10 via-card to-card border-s-4 border-s-emerald-600">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
@@ -254,7 +270,7 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
       </div>
 
       {/* Monthly Summary Table */}
-      <Card className="border-border/60 shadow-md">
+      <Card className="border-border/60 shadow-md print:hidden">
         <CardHeader className="bg-muted/30 border-b border-border/60 py-4">
           <CardTitle className="text-base sm:text-lg font-extrabold text-foreground flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-emerald-600" />
@@ -282,11 +298,11 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8">{locale === 'ur' ? 'لوڈ ہو رہا ہے...' : 'Loading...'}</TableCell>
                 </TableRow>
-              ) : monthlyData.length === 0 ? (
+              ) : filteredData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{locale === 'ur' ? 'کوئی ریکارڈ نہیں ملا' : 'No records found'}</TableCell>
                 </TableRow>
-              ) : monthlyData.map((student: any) => (
+              ) : filteredData.map((student: any) => (
                 <TableRow key={student.id} className={student.percentage < 70 ? 'bg-rose-500/5' : ''}>
                   <TableCell className="font-bold py-3">
                     <div className="flex items-center gap-2.5">
@@ -352,6 +368,82 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
           </p>
         </CardFooter>
       </Card>
+
+      {/* Printable Slip for Single Student (Visible only on Print) */}
+      {selectedStudent !== 'all' && filteredData.length === 1 && (
+        <div className="hidden print:block font-ur p-8">
+          <div className="border-2 border-primary/20 rounded-xl p-8 max-w-3xl mx-auto">
+            {/* Header */}
+            <div className="text-center space-y-2 mb-8 border-b-2 border-primary/10 pb-6">
+              <h1 className="text-3xl font-extrabold text-primary">جامعہ الحکمہ (Al-Hikmah School)</h1>
+              <h2 className="text-xl font-bold text-foreground">طالب علم ماہانہ حاضری سلپ (Attendance Slip)</h2>
+              <p className="text-sm font-bold text-muted-foreground">
+                مہینہ: {selectedMonth} | 
+                کلاس: {classList.find(c => c.id === selectedClass)?.name_ur || ''}
+              </p>
+            </div>
+
+            {/* Student Info */}
+            <div className="grid grid-cols-2 gap-6 mb-8 bg-muted/30 p-6 rounded-lg">
+              <div>
+                <p className="text-sm text-muted-foreground font-bold">نام طالب علم (Student Name)</p>
+                <p className="text-xl font-extrabold mt-1">{filteredData[0].nameUrdu}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground font-bold">رجسٹریشن نمبر (Reg No)</p>
+                <p className="text-xl font-extrabold font-en mt-1">{filteredData[0].regId}</p>
+              </div>
+            </div>
+
+            {/* Attendance Stats Grid */}
+            <div className="grid grid-cols-4 gap-4 mb-10">
+              <div className="border-2 border-emerald-500/20 bg-emerald-500/5 p-4 rounded-xl text-center">
+                <p className="text-sm font-bold text-emerald-700">حاضر</p>
+                <p className="text-3xl font-extrabold font-en text-emerald-600 mt-2">{filteredData[0].present}</p>
+              </div>
+              <div className="border-2 border-rose-500/20 bg-rose-500/5 p-4 rounded-xl text-center">
+                <p className="text-sm font-bold text-rose-700">غیر حاضر</p>
+                <p className="text-3xl font-extrabold font-en text-rose-600 mt-2">{filteredData[0].absent}</p>
+              </div>
+              <div className="border-2 border-amber-500/20 bg-amber-500/5 p-4 rounded-xl text-center">
+                <p className="text-sm font-bold text-amber-700">رخصت</p>
+                <p className="text-3xl font-extrabold font-en text-amber-600 mt-2">{filteredData[0].leave}</p>
+              </div>
+              <div className="border-2 border-primary/20 bg-primary/5 p-4 rounded-xl text-center">
+                <p className="text-sm font-bold text-primary">کل ایام</p>
+                <p className="text-3xl font-extrabold font-en text-primary mt-2">{totalSchoolDays}</p>
+              </div>
+            </div>
+
+            {/* Percentage & Status */}
+            <div className="flex items-center justify-between border-t-2 border-primary/10 pt-6 px-4">
+              <div>
+                <p className="text-sm font-bold text-muted-foreground mb-1">تناسب حاضری (%)</p>
+                <p className="text-3xl font-extrabold font-en">{filteredData[0].percentage}%</p>
+              </div>
+              <div className="text-end">
+                <p className="text-sm font-bold text-muted-foreground mb-1">کیفیت (Status)</p>
+                <p className={`text-2xl font-extrabold ${filteredData[0].percentage >= 75 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  {filteredData[0].percentage >= 90 ? 'بہترین (Excellent)' : 
+                   filteredData[0].percentage >= 75 ? 'تسلی بخش (Satisfactory)' : 'کم حاضری وارننگ (Warning)'}
+                </p>
+              </div>
+            </div>
+
+            {/* Signatures */}
+            <div className="flex justify-between items-end mt-24 px-8">
+              <div className="text-center">
+                <div className="w-40 border-b-2 border-black/40 mb-2"></div>
+                <p className="font-bold text-sm">دستخط استاد (Teacher)</p>
+              </div>
+              <div className="text-center">
+                <div className="w-40 border-b-2 border-black/40 mb-2"></div>
+                <p className="font-bold text-sm">دستخط پرنسپل (Principal)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
