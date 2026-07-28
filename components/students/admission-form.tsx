@@ -47,6 +47,7 @@ export function AdmissionForm() {
   const [generatedRegId, setGeneratedRegId] = useState<string>("");
   const [onlineRequests, setOnlineRequests] = useState<OnlineAdmissionRequest[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
   const [selectedDept, setSelectedDept] = useState<string>('dars_nizami');
   const { locale, t } = useLanguage();
 
@@ -65,12 +66,16 @@ export function AdmissionForm() {
   });
 
   useEffect(() => {
-    const fetchClasses = async () => {
+    const fetchData = async () => {
       const supabase = createClient();
-      const { data } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
-      if (data) setClasses(data);
+      const [clsData, secData] = await Promise.all([
+         (supabase as any).from('classes').select('*').order('created_at', { ascending: true }),
+         (supabase as any).from('sections').select('*').order('created_at', { ascending: true })
+      ]);
+      if (clsData.data) setClasses(clsData.data);
+      if (secData.data) setSections(secData.data);
     };
-    fetchClasses();
+    fetchData();
     setGeneratedRegId(`REG-${new Date().getFullYear()}-${Date.now().toString().slice(-5)}`);
 
     try {
@@ -142,6 +147,7 @@ export function AdmissionForm() {
         is_orphan: data.isOrphan || false,
         is_zakat_eligible: data.isZakatEligible || false,
         blood_group: data.bloodGroup || null,
+        general_notes: data.sectionId ? `Section UUID: ${data.sectionId}\n${data.generalNotes || ''}` : (data.generalNotes || null),
       };
 
       const { error } = await (supabase as any).from('students').insert([newStudent]);
@@ -324,7 +330,7 @@ export function AdmissionForm() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold">{locale === 'ur' ? 'صنف (Gender) *' : 'Gender *'}</Label>
                 <Select onValueChange={(val: any) => setValue('gender', val)} defaultValue="male">
@@ -385,6 +391,25 @@ export function AdmissionForm() {
                   </SelectContent>
                 </Select>
                 {errors.classId && <p className="text-[11px] text-destructive">{errors.classId.message}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'سیکشن منتخب کریں' : 'Assign Section'}</Label>
+                <Select onValueChange={(val) => setValue('sectionId', val)}>
+                  <SelectTrigger className={`w-full h-10 text-xs font-ur`}>
+                    <SelectValue placeholder={locale === 'ur' ? '...سیکشن' : 'Select section...'} />
+                  </SelectTrigger>
+                  <SelectContent className="font-ur">
+                    {sections.filter(s => s.class_id === watch('classId')).map(s => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {locale === 'ur' ? s.name_ur : s.name_en}
+                      </SelectItem>
+                    ))}
+                    {sections.filter(s => s.class_id === watch('classId')).length === 0 && (
+                       <SelectItem value="none" disabled>{locale === 'ur' ? 'اس کلاس میں کوئی سیکشن نہیں' : 'No sections'}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

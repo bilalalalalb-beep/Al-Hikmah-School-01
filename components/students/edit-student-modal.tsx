@@ -17,7 +17,7 @@ import {
   DialogFooter,
   DialogDescription
 } from '@/components/ui/dialog';
-import { Edit, Save, CheckCircle2 } from 'lucide-react';
+import { Edit, Save, Upload, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
 import { createClient } from '@/lib/supabase/client';
@@ -31,6 +31,7 @@ interface EditStudentModalProps {
 
 export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: EditStudentModalProps) {
   const [submitting, setSubmitting] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const { locale } = useLanguage();
   const supabase = createClient();
 
@@ -46,17 +47,22 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
   });
 
   const [classes, setClasses] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
   const [selectedDept, setSelectedDept] = useState<string>('dars_nizami');
 
   const isOrphan = watch('isOrphan');
   const isZakatEligible = watch('isZakatEligible');
 
   useEffect(() => {
-    const fetchClasses = async () => {
-      const { data } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
-      if (data) setClasses(data);
+    const fetchData = async () => {
+      const [clsData, secData] = await Promise.all([
+         (supabase as any).from('classes').select('*').order('created_at', { ascending: true }),
+         (supabase as any).from('sections').select('*').order('created_at', { ascending: true })
+      ]);
+      if (clsData.data) setClasses(clsData.data);
+      if (secData.data) setSections(secData.data);
     };
-    fetchClasses();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -87,6 +93,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         isZakatEligible: studentData.is_zakat_eligible || false,
         bloodGroup: studentData.blood_group || '',
       });
+      setPhotoPreview(studentData.photo_url || null);
     }
   }, [studentData, isOpen, reset, classes]);
 
@@ -111,6 +118,8 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         is_orphan: data.isOrphan,
         is_zakat_eligible: data.isZakatEligible,
         blood_group: data.bloodGroup || null,
+        photo_url: photoPreview || null,
+        general_notes: data.sectionId ? `Section UUID: ${data.sectionId}\n${studentData.general_notes || ''}` : (studentData.general_notes || null),
       };
 
       const { error } = await (supabase as any)
@@ -123,6 +132,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
       toast.success(locale === 'ur' ? '🎉 طالب علم کا ریکارڈ کامیابی سے اپڈیٹ ہو گیا!' : 'Student record updated successfully!');
       onSuccess();
       onClose();
+      }
     } catch (err: any) {
       toast.error(err.message || 'Error updating student record');
     } finally {
@@ -130,11 +140,23 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
     }
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+        toast.info(locale === 'ur' ? "تصویر لوڈ ہو چکی ہے (Cloudinary پر اپلوڈ کے لیے تیار ہے)۔" : "Photo loaded for Cloudinary upload.");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   if (!studentData) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto font-ur p-0 border-t-4 border-t-amber-500">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto font-ur p-0 border-t-4 border-t-amber-500">
         <DialogHeader className="p-6 pb-2 border-b border-border/60 bg-muted/20">
           <DialogTitle className="text-xl font-extrabold text-foreground flex items-center gap-2">
             <Edit className="w-5 h-5 text-amber-500" />
@@ -146,7 +168,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Column 1 */}
             <div className="space-y-4">
               <h4 className="text-sm font-bold text-primary border-b border-border/50 pb-1 mb-3">
@@ -214,6 +236,25 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
                 </Select>
                 {errors.classId && <p className="text-[11px] text-destructive">{errors.classId.message}</p>}
               </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">{locale === 'ur' ? 'سیکشن منتخب کریں' : 'Assign Section'}</Label>
+                <Select onValueChange={(val) => setValue('sectionId', val)}>
+                  <SelectTrigger className={`w-full h-10 text-xs font-ur`}>
+                    <SelectValue placeholder={locale === 'ur' ? '...سیکشن' : 'Select section...'} />
+                  </SelectTrigger>
+                  <SelectContent className="font-ur">
+                    {sections.filter(s => s.class_id === watch('classId')).map(s => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {locale === 'ur' ? s.name_ur : s.name_en}
+                      </SelectItem>
+                    ))}
+                    {sections.filter(s => s.class_id === watch('classId')).length === 0 && (
+                       <SelectItem value="none" disabled>{locale === 'ur' ? 'اس کلاس میں کوئی سیکشن نہیں' : 'No sections'}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Column 2 */}
@@ -262,6 +303,37 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
                     onCheckedChange={(checked) => setValue('isZakatEligible', checked)} 
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Column 3: Photo Upload */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold text-primary border-b border-border/50 pb-1 mb-3 flex items-center gap-1.5">
+                <Upload className="w-4 h-4" />
+                {locale === 'ur' ? 'طالب علم کی تصویر' : 'Student Photo'}
+              </h4>
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="w-40 h-48 rounded-xl border-2 border-dashed border-border/80 bg-muted/40 flex flex-col items-center justify-center overflow-hidden relative group hover:border-primary/60 transition-colors">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Student preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center p-4">
+                      <User className="w-10 h-10 text-muted-foreground/60 mx-auto mb-2" />
+                      <p className="text-[11px] font-bold text-muted-foreground">{locale === 'ur' ? 'تصویر منتخب کریں' : 'Select Photo'}</p>
+                    </div>
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handlePhotoChange} 
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                  />
+                </div>
+                {photoPreview && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setPhotoPreview(null)} className="h-8 text-xs font-bold">
+                    {locale === 'ur' ? 'تصویر ہٹائیں' : 'Remove Photo'}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

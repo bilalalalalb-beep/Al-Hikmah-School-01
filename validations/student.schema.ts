@@ -8,6 +8,7 @@ export const studentAdmissionSchema = z.object({
   gender: z.enum(['male', 'female', 'other'], { message: 'Please select gender' }),
   dateOfBirth: z.string().optional(),
   classId: z.string().min(1, 'Please assign a class / grade'),
+  sectionId: z.string().optional(),
   fatherName: z.string().min(2, "Father / Guardian's name is required"),
   fatherNameEn: z.string().optional(),
   fatherPhone: z.string().min(10, 'Valid contact number is required'),
