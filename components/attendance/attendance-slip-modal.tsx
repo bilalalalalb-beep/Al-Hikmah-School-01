@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Printer, Download, UserCheck, ShieldCheck, QrCode, School, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
+import { usePortalSettings } from '@/lib/settings/context';
 
 export interface AttendanceSlipData {
   regId: string;
@@ -31,6 +32,7 @@ interface AttendanceSlipModalProps {
 
 export function AttendanceSlipModal({ isOpen, onClose, slipData }: AttendanceSlipModalProps) {
   const { locale } = useLanguage();
+  const { settings } = usePortalSettings();
 
   if (!slipData) return null;
 
@@ -43,7 +45,9 @@ export function AttendanceSlipModal({ isOpen, onClose, slipData }: AttendanceSli
     const dir = locale === 'ur' ? 'rtl' : 'ltr';
     const title = locale === 'ur' ? `حاضری رسید - ${slipData.studentNameUrdu}` : `Attendance Slip - ${slipData.studentNameEn}`;
     
-    const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+    const logoHtml = settings.logo 
+      ? `<img src="${settings.logo}" style="width: 48px; height: 48px; object-fit: contain;" />` 
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
 
     const fullHtml = `<!DOCTYPE html>
 <html lang="${locale}" dir="${dir}">
@@ -200,7 +204,7 @@ export function AttendanceSlipModal({ isOpen, onClose, slipData }: AttendanceSli
   <div class="container">
     <div class="header">
       <div class="header-logo">
-        <div>${logoSvg}</div>
+        <div>${logoHtml}</div>
         <div>
           <h1 class="school-title">${locale === 'ur' ? 'جامعہ الحکمہ الاسلامیہ و پبلک سکول' : 'Al-Hikmah Madrasa & Public School'}</h1>
           <div class="school-sub">${locale === 'ur' ? 'شعبہ امتحانات و حاضری (Examination & Attendance Dept)' : 'Examination & Attendance Dept'}</div>
@@ -307,8 +311,14 @@ export function AttendanceSlipModal({ isOpen, onClose, slipData }: AttendanceSli
           {/* Header Banner */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b-2 border-primary/20 pb-5 text-center sm:text-start print:pb-3 print:gap-2">
             <div className="flex items-center gap-3.5">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-700 via-primary to-blue-800 text-white flex items-center justify-center shadow-md shrink-0 border border-sky-400/30 print:w-12 print:h-12 print:bg-sky-700">
-                <School className="w-8 h-8 print:w-6 print:h-6" />
+              <div className="w-14 h-14 rounded-2xl bg-white text-primary flex items-center justify-center shadow-md shrink-0 border border-sky-400/30 print:w-12 print:h-12 print:border-none p-1">
+                {settings.logo ? (
+                  <img src={settings.logo} alt="Logo" className="w-full h-full object-contain" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-sky-700 via-primary to-blue-800 text-white rounded-xl flex items-center justify-center">
+                    <School className="w-8 h-8 print:w-6 print:h-6" />
+                  </div>
+                )}
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-extrabold text-foreground tracking-tight print:text-base print:text-black">

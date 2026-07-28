@@ -21,17 +21,20 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
+import { usePortalSettings } from '@/lib/settings/context';
 import { createClient } from '@/lib/supabase/client';
 import { AttendanceSlipModal, AttendanceSlipData } from './attendance-slip-modal';
 
 export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' }) {
   const { locale, t } = useLanguage();
+  const { settings } = usePortalSettings();
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
   const [selectedStudent, setSelectedStudent] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const [classList, setClassList] = useState<any[]>([]);
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
@@ -146,7 +149,15 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
     fetchData();
   }, [selectedClass, selectedMonth]);
 
-  const filteredData = selectedStudent === 'all' ? monthlyData : monthlyData.filter((s: any) => s.id === selectedStudent);
+  let filteredData = selectedStudent === 'all' ? monthlyData : monthlyData.filter((s: any) => s.id === selectedStudent);
+  
+  if (statusFilter === '100p') {
+    filteredData = filteredData.filter((s: any) => s.percentage === 100);
+  } else if (statusFilter === '0p') {
+    filteredData = filteredData.filter((s: any) => s.percentage === 0);
+  } else if (statusFilter === 'warning') {
+    filteredData = filteredData.filter((s: any) => s.percentage < 75);
+  }
 
   const averageAttendance = filteredData.length > 0
     ? Math.round(filteredData.reduce((acc: any, curr: any) => acc + curr.percentage, 0) / filteredData.length)
@@ -184,8 +195,10 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
     const className = cls ? (locale === 'ur' ? cls.name_ur : cls.name_en) : '';
     const title = locale === 'ur' ? `ماہانہ حاضری رپورٹ - ${className}` : `Monthly Attendance - ${className}`;
     
-    // Islamic/School Logo SVG
-    const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+    // Islamic/School Logo HTML
+    const logoHtml = settings.logo 
+      ? `<img src="${settings.logo}" style="width: 48px; height: 48px; object-fit: contain;" />` 
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
 
     let rowsHtml = '';
     filteredData.forEach((s: any, idx: number) => {
@@ -270,7 +283,7 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
   <div class="container">
     <div class="header">
       <div class="header-logo">
-        <div>${logoSvg}</div>
+        <div>${logoHtml}</div>
         <div>
           <h1 class="school-title">${locale === 'ur' ? 'جامعہ الحکمہ الاسلامیہ و پبلک سکول' : 'Al-Hikmah Madrasa & Public School'}</h1>
           <div class="school-sub">${locale === 'ur' ? 'شعبہ امتحانات و حاضری (Examination & Attendance)' : 'Examination & Attendance Dept'}</div>
@@ -342,48 +355,59 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
       <Card className="border-border/60 shadow-sm bg-card/95 backdrop-blur-md">
         <CardContent className="p-4 sm:p-6 print:hidden">
           <div className="flex flex-col xl:flex-row items-center justify-between gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full xl:w-auto">
-              <div className="space-y-1.5">
-                <span className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? 'درجہ / کلاس' : 'Select Class'}</span>
-                <Select value={selectedClass} onValueChange={setSelectedClass}>
-                  <SelectTrigger className="h-10 text-xs sm:text-sm font-bold font-ur w-full sm:w-64 bg-background"><SelectValue /></SelectTrigger>
-                  <SelectContent className="font-ur">
-                    {classList.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{locale === 'ur' ? c.name_ur : c.name_en}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+              <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <SelectTrigger className="w-[160px] h-11 bg-muted/30 border-primary/20">
+                  <SelectValue placeholder={locale === 'ur' ? 'کلاس منتخب کریں' : 'Select Class'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {classList.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {locale === 'ur' ? c.name_ur : c.name_en}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              <div className="space-y-1.5">
-                <span className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? 'تعلیمی مہینہ / سال' : 'Select Month'}</span>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="h-10 text-xs sm:text-sm font-bold font-mono w-full sm:w-48 bg-background"><SelectValue /></SelectTrigger>
-                  <SelectContent className="font-ur">
-                    {Array.from({length: 6}).map((_, i) => {
-                      const d = new Date();
-                      d.setMonth(d.getMonth() - i);
-                      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                      const labelUr = new Intl.DateTimeFormat('ur-PK', { month: 'long', year: 'numeric' }).format(d);
-                      const labelEn = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(d);
-                      return <SelectItem key={val} value={val}>{locale === 'ur' ? labelUr : labelEn}</SelectItem>
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[140px] h-11 bg-muted/30 border-primary/20 font-en">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="font-ur">
+                  {Array.from({length: 6}).map((_, i) => {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    const labelUr = new Intl.DateTimeFormat('ur-PK', { month: 'long', year: 'numeric' }).format(d);
+                    const labelEn = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(d);
+                    return <SelectItem key={val} value={val}>{locale === 'ur' ? labelUr : labelEn}</SelectItem>
+                  })}
+                </SelectContent>
+              </Select>
 
-              <div className="space-y-1.5">
-                <span className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? 'طالب علم منتخب کریں' : 'Select Student'}</span>
-                <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                  <SelectTrigger className="h-10 text-xs sm:text-sm font-bold font-ur w-full sm:w-48 bg-background"><SelectValue /></SelectTrigger>
-                  <SelectContent className="font-ur">
-                    <SelectItem value="all">{locale === 'ur' ? 'تمام طلباء (All Students)' : 'All Students'}</SelectItem>
-                    {monthlyData.map((s: any) => (
-                      <SelectItem key={s.id} value={s.id}>{s.regId} - {locale === 'ur' ? s.nameUrdu : s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={selectedStudent} onValueChange={setSelectedStudent} disabled={!selectedClass || loading}>
+                <SelectTrigger className="w-[180px] h-11 bg-muted/30 border-primary/20">
+                  <SelectValue placeholder={locale === 'ur' ? 'طالب علم تلاش کریں' : 'Select Student'} />
+                </SelectTrigger>
+                <SelectContent className="font-ur">
+                  <SelectItem value="all">{locale === 'ur' ? 'تمام طلباء (All Students)' : 'All Students'}</SelectItem>
+                  {monthlyData.map((s: any) => (
+                    <SelectItem key={s.id} value={s.id}>{s.regId} - {locale === 'ur' ? s.nameUrdu : s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter} disabled={!selectedClass || loading || selectedStudent !== 'all'}>
+                <SelectTrigger className="w-[170px] h-11 bg-muted/30 border-primary/20">
+                  <SelectValue placeholder={locale === 'ur' ? 'حاضری کی کیفیت' : 'Status Filter'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{locale === 'ur' ? 'تمام طلباء (All)' : 'All Students'}</SelectItem>
+                  <SelectItem value="100p">{locale === 'ur' ? 'مکمل حاضر (100%)' : '100% Present'}</SelectItem>
+                  <SelectItem value="0p">{locale === 'ur' ? 'مکمل غیر حاضر' : '100% Absent'}</SelectItem>
+                  <SelectItem value="warning">{locale === 'ur' ? 'کم حاضری (<75%)' : 'Below 75% Warning'}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
