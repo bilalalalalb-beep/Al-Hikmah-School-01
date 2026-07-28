@@ -21,9 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
-
-
-
+import { createClient } from '@/lib/supabase/client';
 export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' }) {
   const { locale, t } = useLanguage();
   const [selectedClass, setSelectedClass] = useState<string>('');
