@@ -76,7 +76,7 @@ export function DailyRegister() {
         .select('*')
         .eq('status', 'active')
         .eq('current_class_id', selectedClass)
-        .eq('current_section_id', selectedSection);
+        .eq('section_id', selectedSection);
         
       const { data: attData } = await (supabase as any).from('attendance_records')
         .select('*')
