@@ -86,6 +86,32 @@ export interface Database {
           created_at?: string
         }
       }
+      departments: {
+        Row: {
+          id: string
+          name_ur: string
+          name_en: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name_ur: string
+          name_en: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name_ur?: string
+          name_en?: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       classes: {
         Row: {
           id: string
@@ -96,6 +122,7 @@ export interface Database {
           section: string | null
           capacity: number
           description: string | null
+          department_id: string | null
           created_at: string
         }
         Insert: {
@@ -107,6 +134,7 @@ export interface Database {
           section?: string | null
           capacity?: number
           description?: string | null
+          department_id?: string | null
           created_at?: string
         }
         Update: {
@@ -118,6 +146,7 @@ export interface Database {
           section?: string | null
           capacity?: number
           description?: string | null
+          department_id?: string | null
           created_at?: string
         }
       }
