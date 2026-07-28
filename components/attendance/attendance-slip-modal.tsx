@@ -43,6 +43,8 @@ export function AttendanceSlipModal({ isOpen, onClose, slipData }: AttendanceSli
     const dir = locale === 'ur' ? 'rtl' : 'ltr';
     const title = locale === 'ur' ? `حاضری رسید - ${slipData.studentNameUrdu}` : `Attendance Slip - ${slipData.studentNameEn}`;
     
+    const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+
     const fullHtml = `<!DOCTYPE html>
 <html lang="${locale}" dir="${dir}">
 <head>
@@ -82,6 +84,7 @@ export function AttendanceSlipModal({ isOpen, onClose, slipData }: AttendanceSli
       padding-bottom: 16px;
       margin-bottom: 20px;
     }
+    .header-logo { display: flex; gap: 16px; align-items: center; }
     
     .school-title { font-size: 20px; font-weight: bold; color: #0369a1; margin: 0; }
     .school-sub { font-size: 13px; color: #0284c7; font-weight: bold; margin-top: 4px; }
@@ -196,9 +199,12 @@ export function AttendanceSlipModal({ isOpen, onClose, slipData }: AttendanceSli
   </div>
   <div class="container">
     <div class="header">
-      <div>
-        <h1 class="school-title">${locale === 'ur' ? 'جامعہ الحکمہ الاسلامیہ و پبلک سکول' : 'Al-Hikmah Madrasa & Public School'}</h1>
-        <div class="school-sub">${locale === 'ur' ? 'شعبہ امتحانات و حاضری (Examination & Attendance Dept)' : 'Examination & Attendance Dept'}</div>
+      <div class="header-logo">
+        <div>${logoSvg}</div>
+        <div>
+          <h1 class="school-title">${locale === 'ur' ? 'جامعہ الحکمہ الاسلامیہ و پبلک سکول' : 'Al-Hikmah Madrasa & Public School'}</h1>
+          <div class="school-sub">${locale === 'ur' ? 'شعبہ امتحانات و حاضری (Examination & Attendance Dept)' : 'Examination & Attendance Dept'}</div>
+        </div>
       </div>
       <div style="text-align: ${dir === 'rtl' ? 'left' : 'right'}">
         <span class="badge">ATTENDANCE REPORT</span>

@@ -173,9 +173,163 @@ export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' 
       });
       setIsSlipOpen(true);
     } else {
-      toast.success(locale === 'ur' ? '🖨️ ماہانہ حاضری رپورٹ پرنٹ کے لیے تیار کی جا رہی ہے...' : '🖨️ Preparing monthly report for printing...');
-      window.print();
+      handleDownloadFullReport();
     }
+  };
+
+  const handleDownloadFullReport = () => {
+    toast.success(locale === 'ur' ? '🖨️ مکمل ماہانہ رپورٹ تیار کی جا رہی ہے...' : '🖨️ Preparing full monthly report...');
+    const dir = locale === 'ur' ? 'rtl' : 'ltr';
+    const cls = classList.find(c => c.id === selectedClass);
+    const className = cls ? (locale === 'ur' ? cls.name_ur : cls.name_en) : '';
+    const title = locale === 'ur' ? `ماہانہ حاضری رپورٹ - ${className}` : `Monthly Attendance - ${className}`;
+    
+    // Islamic/School Logo SVG
+    const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+
+    let rowsHtml = '';
+    filteredData.forEach((s: any, idx: number) => {
+      const statusText = s.percentage >= 90 ? (locale === 'ur' ? 'بہترین' : 'Excellent') : 
+                         s.percentage >= 75 ? (locale === 'ur' ? 'تسلی بخش' : 'Satisfactory') : 
+                         (locale === 'ur' ? 'وارننگ' : 'Warning');
+      const statusColor = s.percentage >= 75 ? '#059669' : '#e11d48';
+      rowsHtml += `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="font-en font-mono" style="font-size: 11px;">${s.regId}</td>
+          <td style="font-weight: bold;">${locale === 'ur' ? s.nameUrdu : s.name}</td>
+          <td class="font-en" style="color: #047857;">${s.present}</td>
+          <td class="font-en" style="color: #be123c;">${s.absent}</td>
+          <td class="font-en" style="color: #b45309;">${s.leave}</td>
+          <td class="font-en font-bold" style="font-size: 16px;">${s.percentage}%</td>
+          <td style="color: ${statusColor}; font-weight: bold;">${statusText}</td>
+        </tr>
+      `;
+    });
+
+    const fullHtml = `<!DOCTYPE html>
+<html lang="${locale}" dir="${dir}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Outfit:wght@400;600;700&display=swap');
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Nastaliq Urdu', 'Urdu Typesetting', serif;
+      background-color: #f8fafc; color: #0f172a; margin: 0; padding: 20px; line-height: 1.8;
+    }
+    .font-en { font-family: 'Outfit', sans-serif !important; line-height: 1.5 !important; }
+    .font-mono { font-family: 'Consolas', monospace !important; }
+    
+    .container {
+      max-width: 900px; margin: 20px auto; background: #ffffff;
+      border: 3px double #0ea5e9; border-radius: 12px; padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 2px solid #bae6fd; padding-bottom: 16px; margin-bottom: 20px;
+    }
+    .header-logo { display: flex; gap: 16px; align-items: center; }
+    .school-title { font-size: 22px; font-weight: bold; color: #0369a1; margin: 0; }
+    .school-sub { font-size: 14px; color: #0284c7; font-weight: bold; margin-top: 4px; }
+    .info-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 20px;
+      border: 1px solid #bae6fd; font-size: 14px; font-weight: bold;
+    }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; }
+    th { background: #0284c7; color: white; padding: 10px; text-align: ${dir === 'rtl' ? 'right' : 'left'}; }
+    td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    .action-bar { text-align: center; margin: 20px auto; max-width: 900px; }
+    .print-btn {
+      background: #0284c7; color: #ffffff; border: none; padding: 12px 24px;
+      border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;
+      font-family: 'Noto Nastaliq Urdu', serif; box-shadow: 0 4px 6px rgba(2, 132, 199, 0.2);
+    }
+    .print-btn:hover { background: #0369a1; }
+    .footer-sigs {
+      display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px;
+      border-top: 1px solid #e2e8f0; font-size: 12px; text-align: center;
+    }
+    .sig-line { width: 140px; border-bottom: 1px solid #94a3b8; margin-bottom: 8px; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .container { border: 2px solid #0284c7; box-shadow: none; margin: 0; width: 100%; max-width: 100%; }
+      .action-bar { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="action-bar">
+    <button onclick="window.print()" class="print-btn">🖨️ اس رپورٹ کو پرنٹ کریں (Print Report)</button>
+  </div>
+  <div class="container">
+    <div class="header">
+      <div class="header-logo">
+        <div>${logoSvg}</div>
+        <div>
+          <h1 class="school-title">${locale === 'ur' ? 'جامعہ الحکمہ الاسلامیہ و پبلک سکول' : 'Al-Hikmah Madrasa & Public School'}</h1>
+          <div class="school-sub">${locale === 'ur' ? 'شعبہ امتحانات و حاضری (Examination & Attendance)' : 'Examination & Attendance Dept'}</div>
+        </div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-weight: bold; color: #0284c7; border: 1px solid #0284c7; padding: 4px 12px; border-radius: 99px;">
+          ${locale === 'ur' ? 'مکمل حاضری رپورٹ' : 'Full Attendance Report'}
+        </div>
+      </div>
+    </div>
+    
+    <div class="info-grid">
+      <div><span style="color: #64748b;">${locale === 'ur' ? 'مہینہ:' : 'Month:'}</span> <span class="font-en">${selectedMonth}</span></div>
+      <div><span style="color: #64748b;">${locale === 'ur' ? 'درجہ / کلاس:' : 'Class:'}</span> ${className}</div>
+      <div><span style="color: #64748b;">${locale === 'ur' ? 'کل ایام:' : 'Total Days:'}</span> <span class="font-en">${totalSchoolDays}</span></div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>${locale === 'ur' ? 'رجسٹریشن' : 'Reg No'}</th>
+          <th>${locale === 'ur' ? 'نام طالب علم' : 'Name'}</th>
+          <th>${locale === 'ur' ? 'حاضر' : 'Present'}</th>
+          <th>${locale === 'ur' ? 'غیر حاضر' : 'Absent'}</th>
+          <th>${locale === 'ur' ? 'رخصت' : 'Leave'}</th>
+          <th>${locale === 'ur' ? 'فیصد' : '%'}</th>
+          <th>${locale === 'ur' ? 'کیفیت' : 'Status'}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+
+    <div class="footer-sigs">
+      <div>
+        <div class="sig-line"></div>
+        <div style="font-weight: bold;">${locale === 'ur' ? 'دستخط استاد' : 'Teacher Signature'}</div>
+      </div>
+      <div>
+        <div class="sig-line"></div>
+        <div style="font-weight: bold;">${locale === 'ur' ? 'دستخط پرنسپل' : 'Principal Signature'}</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Full_Attendance_Report_${className}_${selectedMonth}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleExportCSV = () => {
