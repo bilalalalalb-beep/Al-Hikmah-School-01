@@ -356,9 +356,13 @@ export function AdmissionForm() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="font-ur">
-                    <SelectItem value="dars_nizami">{locale === 'ur' ? 'درس نظامی' : 'Dars-e-Nizami'}</SelectItem>
-                    <SelectItem value="hifz">{locale === 'ur' ? 'شعبہ حفظ' : 'Hifz Dept'}</SelectItem>
-                    <SelectItem value="school">{locale === 'ur' ? 'عصری سکول' : 'Modern School'}</SelectItem>
+                    <SelectItem value="school">{locale === 'ur' ? 'عصری سکول' : 'School'}</SelectItem>
+                    <SelectItem value="hifz">{locale === 'ur' ? 'شعبہ حفظ' : 'Hifz'}</SelectItem>
+                    <SelectItem value="dars_nizami">{locale === 'ur' ? 'درس نظامی (عالم کورس)' : 'Dars-e-Nizami'}</SelectItem>
+                    <SelectItem value="hifz_nazra">{locale === 'ur' ? 'شعبہ حفظ و ناظرہ' : 'Hifz & Nazra'}</SelectItem>
+                    <SelectItem value="tajweed">{locale === 'ur' ? 'شعبہ تجوید و قرآت' : 'Tajweed & Qiraat'}</SelectItem>
+                    <SelectItem value="balighan">{locale === 'ur' ? 'شعبہ تعلیم بالغان' : 'Adult Education'}</SelectItem>
+                    <SelectItem value="takhassusat">{locale === 'ur' ? 'شعبہ تخصصات' : 'Takhassusat'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

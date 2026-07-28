@@ -48,17 +48,11 @@ interface StudentRecord {
   is_zakat_eligible?: boolean;
 }
 
-const classNamesMap: Record<string, { ur: string; en: string }> = {
-  '11111111-1111-1111-1111-111111111101': { ur: 'درجہ اول (ناظرہ)', en: 'Grade 1 (Nazira)' },
-  '11111111-1111-1111-1111-111111111102': { ur: 'درجہ پنجم (پرائمری)', en: 'Grade 5 (Primary)' },
-  '11111111-1111-1111-1111-111111111103': { ur: 'درجہ دہم (سائنس)', en: 'Grade 10 (Science)' },
-  '11111111-1111-1111-1111-111111111104': { ur: 'شعبہ حفظ القرآن', en: 'Hifz al-Quran' },
-  '11111111-1111-1111-1111-111111111105': { ur: 'درس نظامی سال اول', en: 'Dars-e-Nizami Y1' },
-  '11111111-1111-1111-1111-111111111106': { ur: 'دورہ حدیث (عالمیت)', en: 'Dora-e-Hadith' },
-};
+// Will fetch dynamically
 
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState<StudentRecord[]>([]);
+  const [classesList, setClassesList] = useState<any[]>([]);
   const [loadingDb, setLoadingDb] = useState(false);
   const [seedingDb, setSeedingDb] = useState(false);
   
@@ -81,18 +75,22 @@ export default function AdminStudentsPage() {
   const fetchStudentsFromDb = async () => {
     try {
       setLoadingDb(true);
-      const { data, error } = await (supabase as any)
-        .from('students')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [studentsData, classesData] = await Promise.all([
+        (supabase as any).from('students').select('*').order('created_at', { ascending: false }),
+        (supabase as any).from('classes').select('*')
+      ]);
 
-      if (error) {
-        console.error('Error fetching students:', error);
-      } else if (data) {
-        setStudents(data);
+      if (studentsData.error) {
+        console.error('Error fetching students:', studentsData.error);
+      } else if (studentsData.data) {
+        setStudents(studentsData.data);
+      }
+
+      if (classesData.data) {
+        setClassesList(classesData.data);
       }
     } catch (err) {
-      console.error('Failed to fetch students:', err);
+      console.error('Failed to fetch data:', err);
     } finally {
       setLoadingDb(false);
     }
@@ -161,8 +159,8 @@ export default function AdminStudentsPage() {
                           (s.father_name && s.father_name.toLowerCase().includes(searchQuery.toLowerCase()));
     
     // 2. Class Filter
-    const classNameObj = s.current_class_id ? classNamesMap[s.current_class_id] : null;
-    const classStr = classNameObj ? `${classNameObj.ur} ${classNameObj.en}` : '';
+    const classObj = s.current_class_id ? classesList.find(c => c.id === s.current_class_id) : null;
+    const classStr = classObj ? `${classObj.name_ur} ${classObj.name_en}` : '';
     const matchesClass = selectedClass === 'all' || classStr.toLowerCase().includes(selectedClass.toLowerCase());
 
     // 3. Gender Filter
@@ -400,8 +398,8 @@ export default function AdminStudentsPage() {
             <TableBody>
               {filteredStudents.length > 0 ? (
                 filteredStudents.map((s) => {
-                  const classObj = s.current_class_id ? classNamesMap[s.current_class_id] : null;
-                  const className = classObj ? (locale === 'ur' ? classObj.ur : classObj.en) : (locale === 'ur' ? 'تعین نہیں ہوا' : 'Unassigned');
+                  const classObj = s.current_class_id ? classesList.find(c => c.id === s.current_class_id) : null;
+                  const className = classObj ? (locale === 'ur' ? classObj.name_ur : classObj.name_en) : (locale === 'ur' ? 'تعین نہیں ہوا' : 'Unassigned');
                   const fullName = `${s.first_name} ${s.last_name || ''}`.trim();
                   const genderText = s.gender === 'female' ? (locale === 'ur' ? 'طالبہ' : 'Female') : (locale === 'ur' ? 'طالب علم' : 'Male');
 
