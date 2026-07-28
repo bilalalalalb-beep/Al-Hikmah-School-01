@@ -21,6 +21,7 @@ export type ExamType = 'mid_term' | 'annual' | 'monthly' | 'board_trial';
 export type GradeLevel = 'mumtaz' | 'jayyid_jiddan' | 'jayyid' | 'maqbool' | 'rasib';
 export type StaffDepartment = 'hifz_nazra' | 'tajweed' | 'balighan' | 'dars_nizami' | 'takhassusat' | 'school' | 'admin' | 'support';
 export type EmpStatus = 'active' | 'on_leave' | 'resigned' | 'terminated';
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
 export interface Database {
   public: {
@@ -244,6 +245,47 @@ export interface Database {
           section_id?: string | null
           credit_hours?: number | null
           created_at?: string | null
+        }
+      }
+      timetables: {
+        Row: {
+          id: string
+          class_id: string
+          section_id: string | null
+          subject_id: string
+          teacher_id: string | null
+          day_of_week: DayOfWeek
+          start_time: string
+          end_time: string
+          room_number: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          class_id: string
+          section_id?: string | null
+          subject_id: string
+          teacher_id?: string | null
+          day_of_week: DayOfWeek
+          start_time: string
+          end_time: string
+          room_number?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          class_id?: string
+          section_id?: string | null
+          subject_id?: string
+          teacher_id?: string | null
+          day_of_week?: DayOfWeek
+          start_time?: string
+          end_time?: string
+          room_number?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
       students: {

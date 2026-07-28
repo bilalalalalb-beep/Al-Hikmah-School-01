@@ -57,6 +57,7 @@ export function Sidebar({ userRole, userName, userEmail, onLogout, isMobile = fa
     { title: locale === 'ur' ? 'مرکزی رپورٹنگ اور لسٹیں (Reports Hub)' : 'Reports & Print Hub', href: '/admin/reports', icon: Printer, roles: ['admin'], badge: locale === 'ur' ? 'پرنٹ / PDF' : 'PDF / Print' },
     { title: t.navStaffRoles, href: '/admin/users', icon: UserCog, roles: ['admin'] },
     { title: t.navClassesSections, href: '/admin/classes', icon: Building2, roles: ['admin'] },
+    { title: locale === 'ur' ? 'نظام الاوقات (Timetable)' : 'Timetable', href: '/admin/timetable', icon: Clock, roles: ['admin'], badge: locale === 'ur' ? 'نیا' : 'New' },
     { title: t.navAllStudents, href: '/admin/students', icon: GraduationCap, roles: ['admin'] },
     { title: t.navFinancialAnalytics, href: '/admin/finance', icon: Wallet, roles: ['admin'] },
     { title: t.navSchoolAttendance, href: '/admin/attendance', icon: CalendarCheck, roles: ['admin'] },
@@ -75,6 +76,7 @@ export function Sidebar({ userRole, userName, userEmail, onLogout, isMobile = fa
     // Teacher Links
     { title: t.navTeacherPortal, href: '/teacher', icon: LayoutDashboard, roles: ['teacher'] },
     { title: t.navAssignedClasses, href: '/teacher/classes', icon: Building2, roles: ['teacher'] },
+    { title: locale === 'ur' ? 'میرا ٹائم ٹیبل' : 'My Timetable', href: '/teacher/timetable', icon: Clock, roles: ['teacher'], badge: locale === 'ur' ? 'نیا' : 'New' },
     { title: t.navDailyAttendance, href: '/teacher/attendance', icon: CalendarCheck, roles: ['teacher'], badge: locale === 'ur' ? 'آج' : 'Today' },
     { title: t.navExamsResults, href: '/teacher/exams', icon: Award, roles: ['teacher'] },
     ...(t.navDailyAttendance ? [] : []), // fallback safety
