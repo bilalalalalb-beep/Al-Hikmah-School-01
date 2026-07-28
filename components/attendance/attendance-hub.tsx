@@ -30,11 +30,11 @@ export function AttendanceHub({ defaultTab = 'daily', role = 'teacher' }: Attend
         </TabsList>
 
         <TabsContent value="daily" className="pt-2 animate-in fade-in-50 duration-200">
-          <DailyRegister />
+          <DailyRegister role={role} />
         </TabsContent>
 
         <TabsContent value="monthly" className="pt-2 animate-in fade-in-50 duration-200">
-          <MonthlySummary />
+          <MonthlySummary role={role} />
         </TabsContent>
       </Tabs>
     </div>

@@ -30,7 +30,7 @@ import { createClient } from '@/lib/supabase/client';
 
 
 
-export function DailyRegister() {
+export function DailyRegister({ role = 'admin' }: { role?: 'teacher' | 'admin' }) {
   const { locale, t } = useLanguage();
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedSection, setSelectedSection] = useState<string>('');
@@ -46,7 +46,26 @@ export function DailyRegister() {
 
   const fetchInitialData = async () => {
     try {
-      const { data: cls } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
+      let allowedClassIds: string[] = [];
+      if (role === 'teacher') {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user?.id) {
+          const { data: assigned } = await (supabase as any).from('class_subjects').select('class_id').eq('teacher_id', userData.user.id);
+          if (assigned && assigned.length > 0) {
+             allowedClassIds = [...new Set(assigned.map((a: any) => a.class_id)) as any];
+          } else {
+             setClassList([]);
+             return;
+          }
+        }
+      }
+
+      let clsQuery = (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
+      if (role === 'teacher' && allowedClassIds.length > 0) {
+        clsQuery = clsQuery.in('id', allowedClassIds);
+      }
+
+      const { data: cls } = await clsQuery;
       const { data: secs } = await (supabase as any).from('sections').select('*').order('created_at', { ascending: true });
       
       if (cls && cls.length > 0) {
@@ -60,6 +79,8 @@ export function DailyRegister() {
             setSelectedSection(firstClassSecs[0].id);
           }
         }
+      } else {
+        setClassList([]);
       }
     } catch (err) {
       console.error(err);

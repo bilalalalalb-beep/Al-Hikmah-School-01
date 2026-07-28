@@ -24,7 +24,7 @@ import { useLanguage } from '@/lib/i18n/context';
 
 
 
-export function MonthlySummary() {
+export function MonthlySummary({ role = 'admin' }: { role?: 'teacher' | 'admin' }) {
   const { locale, t } = useLanguage();
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -40,10 +40,35 @@ export function MonthlySummary() {
 
   React.useEffect(() => {
     const fetchClasses = async () => {
-      const { data } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
-      if (data && data.length > 0) {
-        setClassList(data);
-        setSelectedClass(data[0].id);
+      try {
+        let allowedClassIds: string[] = [];
+        if (role === 'teacher') {
+          const { data: userData } = await supabase.auth.getUser();
+          if (userData?.user?.id) {
+            const { data: assigned } = await (supabase as any).from('class_subjects').select('class_id').eq('teacher_id', userData.user.id);
+            if (assigned && assigned.length > 0) {
+               allowedClassIds = [...new Set(assigned.map((a: any) => a.class_id)) as any];
+            } else {
+               setClassList([]);
+               return;
+            }
+          }
+        }
+
+        let clsQuery = (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
+        if (role === 'teacher' && allowedClassIds.length > 0) {
+          clsQuery = clsQuery.in('id', allowedClassIds);
+        }
+
+        const { data } = await clsQuery;
+        if (data && data.length > 0) {
+          setClassList(data);
+          setSelectedClass(data[0].id);
+        } else {
+          setClassList([]);
+        }
+      } catch (err) {
+        console.error(err);
       }
     };
     fetchClasses();
