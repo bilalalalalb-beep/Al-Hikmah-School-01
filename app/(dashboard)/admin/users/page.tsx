@@ -87,7 +87,7 @@ export default function StaffRolesAndPromotionPage() {
 
   // Promotion Dialog State
   const [promoDialogOpen, setPromoDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<StaffUserItem | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [targetRole, setTargetRole] = useState<UserRole>('clerk');
   const [promoReason, setPromoReason] = useState('');
   const [isSubmittingPromo, setIsSubmittingPromo] = useState(false);
@@ -112,7 +112,7 @@ export default function StaffRolesAndPromotionPage() {
     { key: 'whatsapp', urdu: 'واٹس ایپ اور ایس ایم ایس پیغامات کا خودکار اجرا', en: 'WhatsApp & SMS Automated Broadcasts' },
   ];
 
-  const handleOpenPromoDialog = (user: StaffUserItem) => {
+  const handleOpenPromoDialog = (user: any) => {
     setSelectedUser(user);
     setTargetRole(user.role);
     setPromoReason(
