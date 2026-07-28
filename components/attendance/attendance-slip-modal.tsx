@@ -368,7 +368,7 @@ export function AttendanceSlipModal({ isOpen, onClose, slipData }: AttendanceSli
             </div>
             <div className="text-end">
               <span className="text-xs text-muted-foreground block print:text-gray-600">{locale === 'ur' ? 'کیفیت (Status)' : 'Status'}</span>
-              <span className={\`font-extrabold \${slipData.percentage >= 75 ? 'text-emerald-600 print:text-emerald-700' : 'text-rose-600 print:text-red-700'}\`}>
+              <span className={`font-extrabold ${slipData.percentage >= 75 ? 'text-emerald-600 print:text-emerald-700' : 'text-rose-600 print:text-red-700'}`}>
                 {slipData.percentage >= 90 ? (locale === 'ur' ? 'بہترین (Excellent)' : 'Excellent') : 
                   slipData.percentage >= 75 ? (locale === 'ur' ? 'تسلی بخش (Satisfactory)' : 'Satisfactory') : 
                   (locale === 'ur' ? 'کم حاضری وارننگ (Warning)' : 'Low Warning')}
