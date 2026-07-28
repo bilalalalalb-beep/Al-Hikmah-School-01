@@ -224,6 +224,7 @@ export interface Database {
           date_of_birth: string | null
           photo_url: string | null
           current_class_id: string | null
+          section_id: string | null
           admission_date: string
           status: StudentStatus
           father_name: string
@@ -253,6 +254,7 @@ export interface Database {
           date_of_birth?: string | null
           photo_url?: string | null
           current_class_id?: string | null
+          section_id?: string | null
           admission_date?: string
           status?: StudentStatus
           father_name: string
@@ -282,6 +284,7 @@ export interface Database {
           date_of_birth?: string | null
           photo_url?: string | null
           current_class_id?: string | null
+          section_id?: string | null
           admission_date?: string
           status?: StudentStatus
           father_name?: string

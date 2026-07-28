@@ -80,6 +80,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         gender: studentData.gender || 'male',
         dateOfBirth: studentData.date_of_birth ? new Date(studentData.date_of_birth).toISOString().split('T')[0] : '',
         classId: studentData.current_class_id || '',
+        sectionId: studentData.section_id || '',
         fatherName: studentData.father_name || '',
         fatherNameEn: studentData.father_name_en || '',
         studentCnic: studentData.student_cnic || '',
@@ -119,7 +120,7 @@ export function EditStudentModal({ isOpen, onClose, studentData, onSuccess }: Ed
         is_zakat_eligible: data.isZakatEligible,
         blood_group: data.bloodGroup || null,
         photo_url: photoPreview || null,
-        general_notes: data.sectionId ? `Section UUID: ${data.sectionId}\n${studentData.general_notes || ''}` : (studentData.general_notes || null),
+        section_id: data.sectionId || null,
       };
 
       const { error } = await (supabase as any)

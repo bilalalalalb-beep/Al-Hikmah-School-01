@@ -147,7 +147,8 @@ export function AdmissionForm() {
         is_orphan: data.isOrphan || false,
         is_zakat_eligible: data.isZakatEligible || false,
         blood_group: data.bloodGroup || null,
-        general_notes: data.sectionId ? `Section UUID: ${data.sectionId}\n${data.generalNotes || ''}` : (data.generalNotes || null),
+        section_id: data.sectionId || null,
+        general_notes: data.generalNotes || null,
       };
 
       const { error } = await (supabase as any).from('students').insert([newStudent]);
