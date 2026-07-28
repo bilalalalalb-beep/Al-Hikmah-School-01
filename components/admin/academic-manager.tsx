@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
 import { createClient } from '@/lib/supabase/client';
+import { TeacherDepartments } from './teacher-departments';
 
 export function AcademicManager() {
   const { locale, dir } = useLanguage();
@@ -39,6 +40,7 @@ export function AcademicManager() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [teacherDepts, setTeacherDepts] = useState<any[]>([]);
   
   const [loadingDb, setLoadingDb] = useState(false);
   const supabase = createClient();
@@ -83,6 +85,10 @@ export function AcademicManager() {
         .in('role', ['teacher', 'admin'])
         .order('full_name', { ascending: true });
       if (teacherData) setTeachers(teacherData);
+
+      // Fetch Teacher Departments
+      const { data: tdData } = await (supabase as any).from('teacher_departments').select('*');
+      if (tdData) setTeacherDepts(tdData);
 
     } catch (err) {
       console.error("Error fetching academic data:", err);
@@ -130,7 +136,9 @@ export function AcademicManager() {
         if (error) throw error;
         toast.success(locale === 'ur' ? 'شعبہ اپڈیٹ ہو گیا!' : 'Department updated!');
       } else {
-        const { error } = await (supabase as any).from('departments').insert([newDept]);
+        const generatedCode = newDept.name_en ? newDept.name_en.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/(^_|_$)/g, '') : `dept_${Date.now()}`;
+        const insertData = { ...newDept, code: generatedCode };
+        const { error } = await (supabase as any).from('departments').insert([insertData]);
         if (error) throw error;
         toast.success(locale === 'ur' ? 'نیا شعبہ محفوظ ہو گیا!' : 'Department added!');
       }
@@ -626,9 +634,16 @@ export function AcademicManager() {
                         <SelectTrigger className="h-10 text-xs"><SelectValue placeholder="استاد منتخب کریں" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">{locale === 'ur' ? 'ابھی تعین نہیں ہوا' : 'Not assigned'}</SelectItem>
-                          {teachers.map(t => (
-                            <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
-                          ))}
+                          {(() => {
+                            const targetClass = classes.find(c => c.id === newAssign.class_id);
+                            const deptId = targetClass?.department_id;
+                            const allowedTeacherIds = deptId ? teacherDepts.filter(td => td.department_id === deptId).map(td => td.teacher_id) : [];
+                            const availableTeachers = allowedTeacherIds.length > 0 ? teachers.filter(t => allowedTeacherIds.includes(t.id)) : teachers;
+                            
+                            return availableTeachers.map(t => (
+                              <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
+                            ));
+                          })()}
                         </SelectContent>
                       </Select>
                     </div>
@@ -647,7 +662,7 @@ export function AcademicManager() {
       </Card>
 
       <Tabs defaultValue="depts" className="w-full" dir={dir}>
-        <TabsList className="w-full grid grid-cols-4 h-12 bg-card border border-border/80 rounded-xl p-1 shadow-sm">
+        <TabsList className="w-full grid grid-cols-5 h-12 bg-card border border-border/80 rounded-xl p-1 shadow-sm overflow-x-auto overflow-y-hidden">
           <TabsTrigger value="depts" className="font-bold text-xs sm:text-sm gap-2">
             <Library className="w-4 h-4 text-orange-600 shrink-0" />
             <span className="hidden sm:inline">{locale === 'ur' ? `1. شعبہ جات (${departments.length})` : `1. Departments (${departments.length})`}</span>
@@ -667,6 +682,11 @@ export function AcademicManager() {
             <BookOpen className="w-4 h-4 text-purple-600 shrink-0" />
             <span className="hidden sm:inline">{locale === 'ur' ? `4. مضامین (${assignments.length})` : `4. Subjects`}</span>
             <span className="sm:hidden">{locale === 'ur' ? 'مضامین' : 'Subjects'}</span>
+          </TabsTrigger>
+          <TabsTrigger value="teachers" className="font-bold text-xs sm:text-sm gap-2">
+            <Users className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="hidden sm:inline">{locale === 'ur' ? `5. اساتذہ و شعبہ جات` : `5. Teachers & Depts`}</span>
+            <span className="sm:hidden">{locale === 'ur' ? 'اساتذہ' : 'Teachers'}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -884,6 +904,10 @@ export function AcademicManager() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="teachers" className="mt-4 focus-visible:outline-none">
+          <TeacherDepartments />
         </TabsContent>
       </Tabs>
     </div>

@@ -67,6 +67,7 @@ export function Sidebar({ userRole, userName, userEmail, onLogout, isMobile = fa
 
     // Clerk Links
     { title: t.navClerkDesk, href: '/clerk', icon: LayoutDashboard, roles: ['clerk'] },
+    { title: locale === 'ur' ? 'نظام الاوقات (Timetable)' : 'Timetable', href: '/clerk/timetable', icon: Clock, roles: ['clerk'] },
     { title: t.navNewAdmissions, href: '/clerk/admissions', icon: GraduationCap, roles: ['clerk'], badge: locale === 'ur' ? 'نیا' : 'New' },
     { title: t.navFeeCollection, href: '/clerk/finance', icon: Wallet, roles: ['clerk'] },
     { title: t.navExpenseTracker, href: '/clerk/expenses', icon: BookOpen, roles: ['clerk'] },

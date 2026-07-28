@@ -288,6 +288,26 @@ export interface Database {
           updated_at?: string
         }
       }
+      teacher_departments: {
+        Row: {
+          id: string
+          teacher_id: string
+          department_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          teacher_id: string
+          department_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          teacher_id?: string
+          department_id?: string
+          created_at?: string
+        }
+      }
       students: {
         Row: {
           id: string

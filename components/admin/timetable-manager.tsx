@@ -31,6 +31,7 @@ export function TimetableManager() {
   const [sections, setSections] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [teacherDepts, setTeacherDepts] = useState<any[]>([]);
   const [timetables, setTimetables] = useState<any[]>([]);
   
   const [selectedClass, setSelectedClass] = useState<string>('');
@@ -52,11 +53,13 @@ export function TimetableManager() {
     const { data: sec } = await (supabase as any).from('sections').select('*');
     const { data: sub } = await (supabase as any).from('subjects').select('*');
     const { data: tch } = await (supabase as any).from('profiles').select('*').in('role', ['teacher', 'admin']);
+    const { data: td } = await (supabase as any).from('teacher_departments').select('*');
     
     if (cls) setClasses(cls);
     if (sec) setSections(sec);
     if (sub) setSubjects(sub);
     if (tch) setTeachers(tch);
+    if (td) setTeacherDepts(td);
   };
 
   const fetchTimetables = async (classId: string, sectionId: string) => {
@@ -256,9 +259,16 @@ export function TimetableManager() {
                             <SelectTrigger className="h-10 text-xs"><SelectValue placeholder="کوئی نہیں" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">{locale === 'ur' ? 'طے نہیں' : 'None'}</SelectItem>
-                              {teachers.map(t => (
-                                <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
-                              ))}
+                              {(() => {
+                                const targetClass = classes.find(c => c.id === selectedClass);
+                                const deptId = targetClass?.department_id;
+                                const allowedTeacherIds = deptId ? teacherDepts.filter(td => td.department_id === deptId).map(td => td.teacher_id) : [];
+                                const availableTeachers = allowedTeacherIds.length > 0 ? teachers.filter(t => allowedTeacherIds.includes(t.id)) : teachers;
+                                
+                                return availableTeachers.map(t => (
+                                  <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
+                                ));
+                              })()}
                             </SelectContent>
                           </Select>
                         </div>
