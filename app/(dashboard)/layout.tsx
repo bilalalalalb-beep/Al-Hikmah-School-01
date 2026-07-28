@@ -6,9 +6,11 @@ import { Navbar } from '@/components/layout/navbar';
 import { UserRole } from '@/types';
 import { useRouter, usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n/context';
+import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<UserRole>('admin');
+  const [actualRole, setActualRole] = useState<string | null>(null);
   const { locale } = useLanguage();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
@@ -18,6 +20,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const fetchActualRole = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await (supabase as any).auth.getUser();
+        if (user) {
+          const { data: profile } = await (supabase as any).from('profiles').select('role').eq('id', user.id).single();
+          if (profile) setActualRole(profile.role);
+        }
+      } catch (e) {}
+    };
+    fetchActualRole();
+  }, []);
 
   useEffect(() => {
     if (pathname.startsWith('/admin')) {
@@ -106,7 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Navbar 
           userRole={role} 
           userName={userName} 
-          onRoleSwitch={handleRoleSwitch}
+          onRoleSwitch={actualRole === 'admin' ? handleRoleSwitch : undefined}
           onOpenMobileMenu={() => setIsMobileSidebarOpen(true)}
         />
         <main className="flex-1 p-3 sm:p-6 md:p-8 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50 transition-colors">
