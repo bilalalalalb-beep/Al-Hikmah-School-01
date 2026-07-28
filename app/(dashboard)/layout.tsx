@@ -27,8 +27,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const supabase = createClient();
         const { data: { user } } = await (supabase as any).auth.getUser();
         if (user) {
-          const { data: profile } = await (supabase as any).from('profiles').select('role').eq('id', user.id).single();
-          if (profile) setActualRole(profile.role);
+          setUserEmail(user.email);
+          const { data: profile } = await (supabase as any).from('profiles').select('role, full_name').eq('id', user.id).single();
+          if (profile) {
+            setActualRole(profile.role);
+            setUserName(profile.full_name || user.email);
+          }
         }
       } catch (e) {}
     };
@@ -38,28 +42,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (pathname.startsWith('/admin')) {
       setRole('admin');
-      setUserName(locale === 'ur' ? 'مولانا طارق صاحب (پرنسپل)' : 'Maulana Tariq (Principal)');
-      setUserEmail('principal@alhikmah.edu');
     } else if (pathname.startsWith('/clerk')) {
       setRole('clerk');
-      setUserName(locale === 'ur' ? 'حافظ زبیر صاحب (نائب مہتمم / کلرک)' : 'Hafiz Zubair (Clerk / VP)');
-      setUserEmail('clerk@alhikmah.edu');
     } else if (pathname.startsWith('/teacher')) {
       setRole('teacher');
-      setUserName(locale === 'ur' ? 'استاد احمد صاحب (شعبہ عالمیت)' : 'Ustad Ahmed (Alimiyah Dept)');
-      setUserEmail('ahmed@alhikmah.edu');
     } else if (pathname.startsWith('/parent')) {
       setRole('parent');
-      setUserName(locale === 'ur' ? 'حاجی محمد امین صاحب (سرپرست)' : 'Haji Muhammad Amin (Parent)');
-      setUserEmail('parent@alhikmah.edu');
     } else if (pathname.startsWith('/accountant')) {
       setRole('accountant');
-      setUserName(locale === 'ur' ? 'مولانا عبید صاحب (خازن / اکاؤںٹنٹ)' : 'Maulana Ubaid (Finance Officer)');
-      setUserEmail('accountant@alhikmah.edu');
     } else if (pathname.startsWith('/warden')) {
       setRole('warden');
-      setUserName(locale === 'ur' ? 'قاری عمران صاحب (ناظمِ دارالاقامہ)' : 'Qari Imran (Hostel Warden)');
-      setUserEmail('warden@alhikmah.edu');
     }
   }, [pathname, locale]);
 
