@@ -152,10 +152,42 @@ export function AdmissionForm() {
         general_notes: data.generalNotes || null,
       };
 
-      const { error } = await (supabase as any).from('students').insert([newStudent]);
+      const { data: stuData, error } = await (supabase as any).from('students').insert([newStudent]).select();
       if (error) {
         toast.error(locale === 'ur' ? `ڈیٹا بیس ایرر: ${error.message}` : `DB Error: ${error.message}`);
-      } else {
+      } else if (stuData && stuData.length > 0) {
+        const studentId = stuData[0].id;
+
+        // Auto-generate Fee Challan for Admission & Tuition
+        try {
+          const { data: feeData } = await (supabase as any)
+            .from('fee_structures')
+            .select('*')
+            .eq('class_id', newStudent.current_class_id)
+            .in('fee_type', ['admission', 'tuition']);
+            
+          if (feeData && feeData.length > 0) {
+            const totalAmount = feeData.reduce((acc: number, f: any) => acc + Number(f.amount), 0);
+            const invoiceNo = `INV-${Date.now().toString().slice(-6)}`;
+            
+            const newInvoice = {
+              invoice_no: invoiceNo,
+              student_id: studentId,
+              class_id: newStudent.current_class_id,
+              billing_month: new Date().toISOString().substring(0, 7), // YYYY-MM
+              total_amount: totalAmount,
+              paid_amount: 0,
+              discount_amount: 0,
+              status: 'unpaid',
+              due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+            };
+            
+            await (supabase as any).from('fee_invoices').insert([newInvoice]);
+          }
+        } catch (feeErr) {
+          console.error("Error creating fee invoice:", feeErr);
+        }
+
         toast.success(
           locale === 'ur' 
             ? `🎉 الحمد للہ! طالب علم (${data.firstName}) کا داخلہ لائیو Supabase میں محفوظ ہو گیا! رجسٹریشن نمبر: ${generatedRegId}`
