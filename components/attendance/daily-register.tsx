@@ -28,67 +28,80 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
 import { createClient } from '@/lib/supabase/client';
 
-// Initial Demo Roster matching Supabase seed data
-const initialRoster = [
-  { id: '44444444-4444-4444-4444-444444444401', regId: 'REG-2026-0001', nameUrdu: 'محمد زبیر بن عبداللہ', name: 'Muhammad Zubair', classId: 'c1', sectionId: 's1', status: 'present', remarks: 'وقت پر حاضر' },
-  { id: '44444444-4444-4444-4444-444444444402', regId: 'REG-2026-0002', nameUrdu: 'احمد رضا قادری', name: 'Ahmed Raza Qadri', classId: 'c1', sectionId: 's1', status: 'present', remarks: '' },
-  { id: '44444444-4444-4444-4444-444444444403', regId: 'REG-2026-0003', nameUrdu: 'طلحہ محمود عثمانی', name: 'Talha Mahmood Usmani', classId: 'c1', sectionId: 's1', status: 'leave', remarks: 'بیماری کی رخصت (والد کا فون آیا)' },
-  { id: '44444444-4444-4444-4444-444444444404', regId: 'REG-2026-0004', nameUrdu: 'عائشہ صدیقہ بنت عمر', name: 'Ayesha Siddiqa', classId: 'c1', sectionId: 's1', status: 'late', remarks: '10 منٹ تاخیر' },
-  { id: '44444444-4444-4444-4444-444444444405', regId: 'REG-2026-0005', nameUrdu: 'حافظ بلال احمد', name: 'Hafiz Bilal Ahmed', classId: 'c4', sectionId: 's3', status: 'present', remarks: 'سبق سنا دیا' },
-  { id: '44444444-4444-4444-4444-444444444406', regId: 'REG-2026-0006', nameUrdu: 'عبدالرحمٰن سندھی', name: 'Abdur Rahman Sindhi', classId: 'c4', sectionId: 's3', status: 'absent', remarks: 'بغیر اطلاع غیر حاضر' },
-  { id: '44444444-4444-4444-4444-444444444407', regId: 'REG-2026-0007', nameUrdu: 'مولوی انس مدنی', name: 'Maulvi Anas Madani', classId: 'c5', sectionId: 's5', status: 'present', remarks: '' },
-  { id: '44444444-4444-4444-4444-444444444408', regId: 'REG-2026-0008', nameUrdu: 'حسنین معاویہ چوہدری', name: 'Hasnain Muawiyah', classId: 'c5', sectionId: 's5', status: 'present', remarks: '' },
-];
 
-const classList = [
-  { id: 'c1', nameUrdu: 'درجہ اول (ناظرہ و بنیادی تعلیم)', name: 'Grade 1 (Nazira & Basics)' },
-  { id: 'c4', nameUrdu: 'شعبہ حفظ القرآن (دارالحفظ)', name: 'Hifz al-Quran Dept' },
-  { id: 'c5', nameUrdu: 'درس نظامی سال اول (عامہ اولیٰ)', name: 'Dars-e-Nizami Year 1' },
-];
-
-const sectionList = [
-  { id: 's1', classId: 'c1', nameUrdu: 'سیکشن الف (صبح)', name: 'Section A (Morning)' },
-  { id: 's3', classId: 'c4', nameUrdu: 'دارالحفظ الف (صبح)', name: 'Darul-Hifz A (Morning)' },
-  { id: 's5', classId: 'c5', nameUrdu: 'سیکشن عامہ (صبح)', name: 'Section Aamah (Morning)' },
-];
 
 export function DailyRegister() {
   const { locale, t } = useLanguage();
-  const [selectedClass, setSelectedClass] = useState('c1');
-  const [selectedSection, setSelectedSection] = useState('s1');
+  const [selectedClass, setSelectedClass] = useState<string>('');
+  const [selectedSection, setSelectedSection] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roster, setRoster] = useState(initialRoster);
+  
+  const [classList, setClassList] = useState<any[]>([]);
+  const [sectionList, setSectionList] = useState<any[]>([]);
+  const [roster, setRoster] = useState<any[]>([]);
   const [loadingDb, setLoadingDb] = useState(false);
   const [savingDb, setSavingDb] = useState(false);
   const supabase = createClient();
 
+  const fetchInitialData = async () => {
+    try {
+      const { data: cls } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
+      const { data: secs } = await (supabase as any).from('sections').select('*').order('created_at', { ascending: true });
+      
+      if (cls && cls.length > 0) {
+        setClassList(cls);
+        setSelectedClass(cls[0].id);
+        
+        if (secs) {
+          setSectionList(secs);
+          const firstClassSecs = secs.filter((s: any) => s.class_id === cls[0].id);
+          if (firstClassSecs.length > 0) {
+            setSelectedSection(firstClassSecs[0].id);
+          }
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchAttendanceFromDb = async () => {
+    if (!selectedClass || !selectedSection) return;
+    
     try {
       setLoadingDb(true);
-      const { data: stdData } = await (supabase as any).from('students').select('*').eq('status', 'active');
-      const { data: attData } = await (supabase as any).from('attendance_records').select('*').eq('date', selectedDate);
+      // Fetch students for the specific class AND section
+      const { data: stdData } = await (supabase as any).from('students')
+        .select('*')
+        .eq('status', 'active')
+        .eq('current_class_id', selectedClass)
+        .eq('current_section_id', selectedSection);
+        
+      const { data: attData } = await (supabase as any).from('attendance_records')
+        .select('*')
+        .eq('date', selectedDate)
+        .eq('class_id', selectedClass);
 
-      if (stdData && stdData.length > 0) {
+      if (stdData) {
         const mapped = stdData.map((s: any) => {
           const existing = attData?.find((a: any) => a.student_id === s.id);
-          let cId = 'c1';
-          if (s.current_class_id === '11111111-1111-1111-1111-111111111104') cId = 'c4';
-          else if (s.current_class_id === '11111111-1111-1111-1111-111111111105') cId = 'c5';
-          else if (s.current_class_id === '11111111-1111-1111-1111-111111111102') cId = 'c1';
-
           return {
             id: s.id,
-            regId: s.registration_id || 'REG-2026-XXXX',
+            regId: s.registration_id || 'REG-XXXX',
             nameUrdu: `${s.first_name} ${s.last_name || ''}`.trim(),
             name: `${s.first_name} ${s.last_name || ''}`.trim(),
-            classId: cId,
-            sectionId: cId === 'c4' ? 's3' : (cId === 'c5' ? 's5' : 's1'),
+            classId: selectedClass,
+            sectionId: selectedSection,
             status: existing ? existing.status : 'present',
             remarks: existing ? existing.remarks || '' : ''
           };
         });
+        // Sort alphabetically by Urdu name by default
+        mapped.sort((a: any, b: any) => a.nameUrdu.localeCompare(b.nameUrdu, 'ur'));
         setRoster(mapped);
+      } else {
+        setRoster([]);
       }
     } catch (err) {
       console.error("Error loading attendance:", err);
@@ -98,13 +111,21 @@ export function DailyRegister() {
   };
 
   useEffect(() => {
-    fetchAttendanceFromDb();
-  }, [selectedDate]);
+    fetchInitialData();
+  }, []);
 
-  // Filtered Roster
+  useEffect(() => {
+    if (selectedClass && selectedSection) {
+      fetchAttendanceFromDb();
+    }
+  }, [selectedDate, selectedClass, selectedSection]);
+
+  // Filtered Roster (by search query since class/section is already filtered in DB)
   const filteredRoster = roster.filter(student => 
-    student.classId === selectedClass && 
-    (searchQuery === '' || student.nameUrdu.includes(searchQuery) || student.name.toLowerCase().includes(searchQuery.toLowerCase()) || student.regId.toLowerCase().includes(searchQuery.toLowerCase()))
+    searchQuery === '' || 
+    student.nameUrdu.includes(searchQuery) || 
+    student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    student.regId.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Live Summary Statistics
@@ -135,13 +156,10 @@ export function DailyRegister() {
     setSavingDb(true);
     try {
       const records = filteredRoster.map(s => {
-        let dbClassId = '11111111-1111-1111-1111-111111111101';
-        if (s.classId === 'c4') dbClassId = '11111111-1111-1111-1111-111111111104';
-        else if (s.classId === 'c5') dbClassId = '11111111-1111-1111-1111-111111111105';
-
         return {
           student_id: s.id,
-          class_id: dbClassId,
+          class_id: selectedClass,
+          section_id: selectedSection,
           date: selectedDate,
           status: s.status,
           remarks: s.remarks || null
@@ -183,7 +201,7 @@ export function DailyRegister() {
                 <SelectTrigger className="h-11 text-xs sm:text-sm font-bold font-ur bg-background"><SelectValue /></SelectTrigger>
                 <SelectContent className="font-ur">
                   {classList.map(c => (
-                    <SelectItem key={c.id} value={c.id} className="font-bold">{locale === 'ur' ? c.nameUrdu : c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id} className="font-bold">{locale === 'ur' ? c.name_ur : c.name_en}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -197,8 +215,8 @@ export function DailyRegister() {
               <Select value={selectedSection} onValueChange={setSelectedSection}>
                 <SelectTrigger className="h-11 text-xs sm:text-sm font-bold font-ur bg-background"><SelectValue /></SelectTrigger>
                 <SelectContent className="font-ur">
-                  {sectionList.filter(s => s.classId === selectedClass).map(sec => (
-                    <SelectItem key={sec.id} value={sec.id} className="font-bold">{locale === 'ur' ? sec.nameUrdu : sec.name}</SelectItem>
+                  {sectionList.filter((s: any) => s.class_id === selectedClass).map((sec: any) => (
+                    <SelectItem key={sec.id} value={sec.id} className="font-bold">{locale === 'ur' ? sec.name_ur : sec.name_en}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
