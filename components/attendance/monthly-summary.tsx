@@ -22,25 +22,104 @@ import {
 import { toast } from 'sonner';
 import { useLanguage } from '@/lib/i18n/context';
 
-const monthlyData = [
-  { id: '1', regId: 'REG-2026-0001', nameUrdu: 'محمد زبیر بن عبداللہ', name: 'Muhammad Zubair', classId: 'c1', totalDays: 25, present: 25, absent: 0, leave: 0, late: 0, percentage: 100 },
-  { id: '2', regId: 'REG-2026-0002', nameUrdu: 'احمد رضا قادری', name: 'Ahmed Raza Qadri', classId: 'c1', totalDays: 25, present: 23, absent: 1, leave: 1, late: 2, percentage: 92 },
-  { id: '3', regId: 'REG-2026-0003', nameUrdu: 'طلحہ محمود عثمانی', name: 'Talha Mahmood Usmani', classId: 'c1', totalDays: 25, present: 20, absent: 2, leave: 3, late: 1, percentage: 80 },
-  { id: '4', regId: 'REG-2026-0004', nameUrdu: 'عائشہ صدیقہ بنت عمر', name: 'Ayesha Siddiqa', classId: 'c1', totalDays: 25, present: 24, absent: 0, leave: 1, late: 4, percentage: 96 },
-  { id: '5', regId: 'REG-2026-0005', nameUrdu: 'حافظ بلال احمد', name: 'Hafiz Bilal Ahmed', classId: 'c4', totalDays: 25, present: 25, absent: 0, leave: 0, late: 0, percentage: 100 },
-  { id: '6', regId: 'REG-2026-0006', nameUrdu: 'عبدالرحمٰن سندھی', name: 'Abdur Rahman Sindhi', classId: 'c4', totalDays: 25, present: 15, absent: 8, leave: 2, late: 5, percentage: 60 },
-  { id: '7', regId: 'REG-2026-0007', nameUrdu: 'مولوی انس مدنی', name: 'Maulvi Anas Madani', classId: 'c5', totalDays: 25, present: 24, absent: 1, leave: 0, late: 0, percentage: 96 },
-  { id: '8', regId: 'REG-2026-0008', nameUrdu: 'حسنین معاویہ چوہدری', name: 'Hasnain Muawiyah', classId: 'c5', totalDays: 25, present: 22, absent: 2, leave: 1, late: 2, percentage: 88 },
-];
+
 
 export function MonthlySummary() {
   const { locale, t } = useLanguage();
-  const [selectedClass, setSelectedClass] = useState('c1');
-  const [selectedMonth, setSelectedMonth] = useState('2026-07');
+  const [selectedClass, setSelectedClass] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
 
-  const filteredSummary = monthlyData.filter(s => s.classId === selectedClass);
-  const averageAttendance = filteredSummary.length > 0
-    ? Math.round(filteredSummary.reduce((acc, curr) => acc + curr.percentage, 0) / filteredSummary.length)
+  const [classList, setClassList] = useState<any[]>([]);
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [totalSchoolDays, setTotalSchoolDays] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
+
+  React.useEffect(() => {
+    const fetchClasses = async () => {
+      const { data } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
+      if (data && data.length > 0) {
+        setClassList(data);
+        setSelectedClass(data[0].id);
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      if (!selectedClass || !selectedMonth) return;
+      setLoading(true);
+      try {
+        const [year, month] = selectedMonth.split('-');
+        const startDate = `${year}-${month}-01`;
+        // get last day of month
+        const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+
+        // 1. Fetch Students
+        const { data: students } = await (supabase as any).from('students')
+          .select('*')
+          .eq('status', 'active')
+          .eq('current_class_id', selectedClass);
+
+        // 2. Fetch Attendance for this class in this month
+        const { data: attendance } = await (supabase as any).from('attendance_records')
+          .select('*')
+          .eq('class_id', selectedClass)
+          .gte('date', startDate)
+          .lte('date', endDate);
+
+        if (students) {
+          // Calculate distinct dates to find total school days
+          const dates = new Set(attendance?.map((a: any) => a.date) || []);
+          const tDays = dates.size;
+          setTotalSchoolDays(tDays);
+
+          const agg = students.map((s: any) => {
+            const stuAtt = attendance?.filter((a: any) => a.student_id === s.id) || [];
+            let p = 0, a = 0, l = 0, lt = 0;
+            stuAtt.forEach((record: any) => {
+              if (record.status === 'present') p++;
+              else if (record.status === 'absent') a++;
+              else if (record.status === 'leave') l++;
+              else if (record.status === 'late') lt++;
+            });
+            // Total attended is present + late
+            const attended = p + lt;
+            const percentage = tDays > 0 ? Math.round((attended / tDays) * 100) : 0;
+
+            return {
+              id: s.id,
+              regId: s.registration_id,
+              nameUrdu: `${s.first_name} ${s.last_name || ''}`.trim(),
+              name: `${s.first_name} ${s.last_name || ''}`.trim(),
+              totalDays: tDays,
+              present: p,
+              absent: a,
+              leave: l,
+              late: lt,
+              percentage: percentage
+            };
+          });
+          
+          agg.sort((a: any, b: any) => a.nameUrdu.localeCompare(b.nameUrdu, 'ur'));
+          setMonthlyData(agg);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedClass, selectedMonth]);
+
+  const averageAttendance = monthlyData.length > 0
+    ? Math.round(monthlyData.reduce((acc, curr) => acc + curr.percentage, 0) / monthlyData.length)
     : 0;
 
   const handlePrintReport = () => {
@@ -64,9 +143,9 @@ export function MonthlySummary() {
                 <Select value={selectedClass} onValueChange={setSelectedClass}>
                   <SelectTrigger className="h-10 text-xs sm:text-sm font-bold font-ur w-full sm:w-64 bg-background"><SelectValue /></SelectTrigger>
                   <SelectContent className="font-ur">
-                    <SelectItem value="c1">{locale === 'ur' ? 'درجہ اول (ناظرہ و بنیادی تعلیم)' : 'Grade 1 (Nazira & Basics)'}</SelectItem>
-                    <SelectItem value="c4">{locale === 'ur' ? 'شعبہ حفظ القرآن (دارالحفظ)' : 'Hifz al-Quran Dept'}</SelectItem>
-                    <SelectItem value="c5">{locale === 'ur' ? 'درس نظامی سال اول (عامہ اولیٰ)' : 'Dars-e-Nizami Year 1'}</SelectItem>
+                    {classList.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{locale === 'ur' ? c.name_ur : c.name_en}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -76,9 +155,14 @@ export function MonthlySummary() {
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                   <SelectTrigger className="h-10 text-xs sm:text-sm font-bold font-mono w-full sm:w-48 bg-background"><SelectValue /></SelectTrigger>
                   <SelectContent className="font-ur">
-                    <SelectItem value="2026-07">{locale === 'ur' ? 'جولائی 2026 (محرم الحرام 1448)' : 'July 2026'}</SelectItem>
-                    <SelectItem value="2026-06">{locale === 'ur' ? 'جون 2026 (ذی الحجہ 1447)' : 'June 2026'}</SelectItem>
-                    <SelectItem value="2026-05">{locale === 'ur' ? 'مئی 2026 (ذی القعدہ 1447)' : 'May 2026'}</SelectItem>
+                    {Array.from({length: 6}).map((_, i) => {
+                      const d = new Date();
+                      d.setMonth(d.getMonth() - i);
+                      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                      const labelUr = new Intl.DateTimeFormat('ur-PK', { month: 'long', year: 'numeric' }).format(d);
+                      const labelEn = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(d);
+                      return <SelectItem key={val} value={val}>{locale === 'ur' ? labelUr : labelEn}</SelectItem>
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -119,8 +203,8 @@ export function MonthlySummary() {
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? 'کل تعلیمی و تدریسی ایام' : 'Total School Days'}</p>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground font-en mt-1">25 <span className="text-sm font-ur text-muted-foreground font-normal">{locale === 'ur' ? 'دن' : 'Days'}</span></h3>
-              <p className="text-[11px] text-blue-600 font-bold mt-1">{locale === 'ur' ? 'جمعہ اور تعطیلات منہا کر کے' : 'Excluding Fridays & Holidays'}</p>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground font-en mt-1">{totalSchoolDays} <span className="text-sm font-ur text-muted-foreground font-normal">{locale === 'ur' ? 'دن' : 'Days'}</span></h3>
+              <p className="text-[11px] text-blue-600 font-bold mt-1">{locale === 'ur' ? 'جن دنوں میں حاضری لگی' : 'Days with marked attendance'}</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-700 flex items-center justify-center shrink-0">
               <Users className="w-6 h-6" />
@@ -133,7 +217,7 @@ export function MonthlySummary() {
             <div>
               <p className="text-xs font-bold text-muted-foreground">{locale === 'ur' ? '100% حاضری والے طلباء' : '100% Attendance Award'}</p>
               <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground font-en mt-1">
-                {filteredSummary.filter(s => s.percentage === 100).length} <span className="text-sm font-ur text-muted-foreground font-normal">{locale === 'ur' ? 'طلباء' : 'Students'}</span>
+                {monthlyData.filter((s: any) => s.percentage === 100).length} <span className="text-sm font-ur text-muted-foreground font-normal">{locale === 'ur' ? 'طلباء' : 'Students'}</span>
               </h3>
               <p className="text-[11px] text-purple-600 font-bold mt-1 flex items-center gap-1">
                 <Award className="w-3.5 h-3.5" /> {locale === 'ur' ? 'حسنِ کارکردگی کے حقدار' : 'Eligible for Excellence Badge'}
@@ -171,7 +255,15 @@ export function MonthlySummary() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSummary.map((student) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">{locale === 'ur' ? 'لوڈ ہو رہا ہے...' : 'Loading...'}</TableCell>
+                </TableRow>
+              ) : monthlyData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{locale === 'ur' ? 'کوئی ریکارڈ نہیں ملا' : 'No records found'}</TableCell>
+                </TableRow>
+              ) : monthlyData.map((student: any) => (
                 <TableRow key={student.id} className={student.percentage < 70 ? 'bg-rose-500/5' : ''}>
                   <TableCell className="font-bold py-3">
                     <div className="flex items-center gap-2.5">
@@ -197,7 +289,7 @@ export function MonthlySummary() {
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs font-bold font-en">
                         <span>{student.percentage}%</span>
-                        <span className="text-[10px] text-muted-foreground font-ur">{student.present}/25 {locale === 'ur' ? 'دن' : 'days'}</span>
+                        <span className="text-[10px] text-muted-foreground font-ur">{student.present + student.late}/{totalSchoolDays} {locale === 'ur' ? 'دن' : 'days'}</span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                         <div 
