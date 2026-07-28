@@ -194,24 +194,27 @@ export interface Database {
           class_id: string
           subject_id: string
           teacher_id: string | null
-          credit_hours: number
-          created_at: string
+          section_id: string | null
+          credit_hours: number | null
+          created_at: string | null
         }
         Insert: {
           id?: string
           class_id: string
           subject_id: string
           teacher_id?: string | null
-          credit_hours?: number
-          created_at?: string
+          section_id?: string | null
+          credit_hours?: number | null
+          created_at?: string | null
         }
         Update: {
           id?: string
           class_id?: string
           subject_id?: string
           teacher_id?: string | null
-          credit_hours?: number
-          created_at?: string
+          section_id?: string | null
+          credit_hours?: number | null
+          created_at?: string | null
         }
       }
       students: {
