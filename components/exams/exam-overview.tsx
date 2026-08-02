@@ -48,6 +48,7 @@ export function ExamOverview() {
       const { data: resData } = await (supabase as any).from('exam_results').select('*').order('obtained_marks', { ascending: false });
       const { data: stdData } = await (supabase as any).from('students').select('*');
       const { data: subData } = await (supabase as any).from('subjects').select('*');
+      const { data: clsData } = await (supabase as any).from('classes').select('*');
 
       if (resData && resData.length > 0) {
         setRawDbResults({ resData, stdData, subData });
@@ -76,15 +77,13 @@ export function ExamOverview() {
         const topStudents = Object.entries(stdMap)
           .map(([sId, val]) => {
             const avgPct = val.totalObt / val.count;
-            let cUr = 'قاعدہ (شعبہ حفظ و ناظرہ)';
-            let cEn = 'Qaida (Basics)';
-            if (val.classId === 'c3' || val.classId === '11111111-1111-1111-1111-111111111103') {
-              cUr = 'حفظِ قرآن کریم'; cEn = 'Hifz al-Quran';
-            } else if (val.classId === 'c11' || val.classId === '11111111-1111-1111-1111-111111111105') {
-              cUr = 'درجہ اولیٰ (عامہ اولیٰ)'; cEn = 'Ula (Year 1 Alimiyah)';
-            } else if (val.classId && val.classId.startsWith('c')) {
-              cUr = `درجہ ${val.classId}`; cEn = `Class ${val.classId}`;
-            }
+            const clsObj = clsData?.find((c: any) => c.id === val.classId);
+            const cUr = clsObj ? clsObj.name_ur : 'درجہ';
+            const cEn = clsObj ? clsObj.name_en : 'Class';
+            
+            const deptCheck = clsObj ? clsObj.name_ur : val.classId;
+            const isHifz = deptCheck.includes('حفظ') || deptCheck.includes('ناظرہ');
+            const isNizami = deptCheck.includes('عامہ') || deptCheck.includes('درجہ');
 
             return {
               id: sId,
@@ -97,7 +96,7 @@ export function ExamOverview() {
               percentage: Number(avgPct.toFixed(1)),
               grade: avgPct >= 90 ? 'ممتاز (Distinction A+)' : avgPct >= 80 ? 'جید جدا (Very Good A)' : avgPct >= 70 ? 'جید (Good B)' : 'مقبول (Pass C)',
               award: avgPct >= 92 ? 'طلائی تمغہ (Gold Medal) 🥇' : avgPct >= 85 ? 'نقری تمغہ (Silver Medal) 🥈' : 'کانسی کا تمغہ (Bronze Medal) 🥉',
-              dept: val.classId.includes('3') ? 'hifz' : val.classId.includes('11') ? 'nizami' : 'school'
+              dept: isHifz ? 'hifz' : isNizami ? 'nizami' : 'school'
             };
           })
           .filter(item => item.percentage >= 40)
@@ -441,7 +440,7 @@ export function ExamOverview() {
                             {locale === 'ur' ? 'ابھی تک پوزیشن ہولڈرز (لوحِ شرف) کا ریکارڈ لائیو ڈیٹا بیس میں موجود نہیں ہے!' : 'No position holders found in live database yet!'}
                           </h4>
                           <p className="text-xs text-muted-foreground max-w-md text-center font-bold">
-                            {locale === 'ur' ? 'براہ کرم مارکس انٹری ڈیسک پر جا کر طلباء کے نمبرات درج کریں یا وہاں دیے گئے بٹن سے اصل ڈیٹا بیس میں 3 حقیقی و مستند طلباء کا اندراج کریں تاکہ پوزیشن ہولڈرز یہاں شو ہوں۔' : 'Please go to Marks Entry desk to enter marks or seed 3 authentic records into the live database.'}
+                            {locale === 'ur' ? 'براہ کرم مارکس انٹری ڈیسک پر جا کر طلباء کے نمبرات درج کریں تاکہ پوزیشن ہولڈرز یہاں شو ہوں۔' : 'Please go to Marks Entry desk to enter marks for enrolled students.'}
                           </p>
                         </div>
                       </TableCell>

@@ -53,9 +53,10 @@ export function MarksEntryDesk() {
   
   const [isSaving, setIsSaving] = useState(false);
   const [loadingDb, setLoadingDb] = useState(false);
-  const [seedingDb, setSeedingDb] = useState(false);
   const [dbStudents, setDbStudents] = useState<any[]>([]);
   const [dbSubjects, setDbSubjects] = useState<any[]>([]);
+  const [dbClasses, setDbClasses] = useState<any[]>([]);
+  const [dbClassSubjects, setDbClassSubjects] = useState<any[]>([]);
   const supabase = createClient();
 
   const fetchMarksFromDb = async () => {
@@ -64,6 +65,19 @@ export function MarksEntryDesk() {
       const { data: resData } = await (supabase as any).from('exam_results').select('*').order('created_at', { ascending: false });
       const { data: stdData } = await (supabase as any).from('students').select('*');
       const { data: subData } = await (supabase as any).from('subjects').select('*');
+      const { data: clsData } = await (supabase as any).from('classes').select('*').order('created_at', { ascending: true });
+      const { data: csData } = await (supabase as any).from('class_subjects').select('*');
+
+      if (csData) setDbClassSubjects(csData);
+
+      if (clsData && clsData.length > 0) {
+        setDbClasses(clsData);
+        if (selectedClass === 'all' || selectedClass === 'c11') {
+          setSelectedClass(clsData[0].id);
+        }
+      } else {
+        setDbClasses([]);
+      }
 
       if (stdData && stdData.length > 0) {
         setDbStudents(stdData);
@@ -135,15 +149,15 @@ export function MarksEntryDesk() {
     return 'rasib';
   };
 
-  // Derive configured subjects/books for the currently selected class
+  // Derive configured subjects/books for the currently selected class based on class_subjects mapping
   const classBooks = useMemo(() => {
-    const classId = selectedClass === 'all' ? 'c11' : selectedClass;
-    const dbMatchedSubs = dbSubjects.filter(sub => 
-      sub.class_id === classId || 
-      (classId === 'c11' && sub.class_id === '11111111-1111-1111-1111-111111111105') ||
-      (classId === 'c1' && sub.class_id === '11111111-1111-1111-1111-111111111101') ||
-      (classId === 'c18' && sub.class_id === '11111111-1111-1111-1111-111111111107')
-    );
+    // 1. Find all subject IDs mapped to this class in class_subjects
+    const mappedSubjectIds = dbClassSubjects
+      .filter((cs: any) => cs.class_id === selectedClass)
+      .map((cs: any) => cs.subject_id);
+
+    // 2. Filter subjects that are assigned to this class
+    const dbMatchedSubs = dbSubjects.filter(sub => mappedSubjectIds.includes(sub.id));
 
     if (dbMatchedSubs && dbMatchedSubs.length > 0) {
       return dbMatchedSubs.map(s => ({
@@ -154,33 +168,26 @@ export function MarksEntryDesk() {
       }));
     }
 
-    // Fallback to authentic curriculum map
-    return curriculumMap[classId] || [
-      { id: `${classId}_1`, titleUr: 'پرچہ 1: مرکزی مضمون', titleEn: 'Paper 1: Core Subject', marks: 100 },
-      { id: `${classId}_2`, titleUr: 'پرچہ 2: اسلامیات و قواعد', titleEn: 'Paper 2: Islamiat & Grammar', marks: 100 },
-      { id: `${classId}_3`, titleUr: 'پرچہ 3: عربی و فارسی ادب', titleEn: 'Paper 3: Arabic & Persian Lit', marks: 100 },
-      { id: `${classId}_4`, titleUr: 'پرچہ 4: تاریخ و سیرت', titleEn: 'Paper 4: History & Seerah', marks: 100 },
-    ];
-  }, [selectedClass, dbSubjects]);
+    return [];
+  }, [selectedClass, dbSubjects, dbClassSubjects]);
 
   // Derive all students belonging to the currently selected class strictly from Database
   const classStudents = useMemo(() => {
-    const classId = selectedClass === 'all' ? 'c11' : selectedClass;
     return dbStudents
-      .filter((s: any) => s.current_class_id === classId || s.class_id === classId || 
-        (classId === 'c11' && s.current_class_id === '11111111-1111-1111-1111-111111111105') ||
-        (classId === 'c1' && s.current_class_id === '11111111-1111-1111-1111-111111111101') ||
-        (classId === 'c18' && s.current_class_id === '11111111-1111-1111-1111-111111111107')
-      )
-      .map((s: any) => ({
-        id: s.id,
-        regId: s.registration_id || 'REG-2026-0000',
-        nameUrdu: `${s.first_name} ${s.last_name || ''}`.trim(),
-        nameEn: `${s.first_name} ${s.last_name || ''}`.trim(),
-        classId,
-        classNameUrdu: `درجہ ${classId}`
-      }));
-  }, [selectedClass, dbStudents]);
+      .filter((s: any) => s.current_class_id === selectedClass)
+      .map((s: any) => {
+        const clsObj = dbClasses.find(c => c.id === selectedClass);
+        return {
+          id: s.id,
+          regId: s.registration_id || 'REG-2026-0000',
+          nameUrdu: `${s.first_name} ${s.last_name || ''}`.trim(),
+          nameEn: `${s.first_name} ${s.last_name || ''}`.trim(),
+          classId: selectedClass,
+          classNameUrdu: clsObj ? clsObj.name_ur : `درجہ`,
+          classNameEn: clsObj ? clsObj.name_en : `Class`
+        };
+      });
+  }, [selectedClass, dbStudents, dbClasses]);
 
   // Search Results across all students strictly in Database
   const searchResults = useMemo(() => {
@@ -193,15 +200,19 @@ export function MarksEntryDesk() {
         const reg = (s.registration_id || '').toLowerCase();
         return name.includes(q) || reg.includes(q);
       })
-      .map(s => ({
-        id: s.id,
-        regId: s.registration_id || 'REG-2026-0000',
-        nameUrdu: `${s.first_name} ${s.last_name || ''}`.trim(),
-        nameEn: `${s.first_name} ${s.last_name || ''}`.trim(),
-        classId: s.current_class_id || 'c11',
-        classNameUrdu: 'متعلقہ درجہ'
-      }));
-  }, [searchQuery, dbStudents]);
+      .map(s => {
+        const clsObj = dbClasses.find(c => c.id === s.current_class_id);
+        return {
+          id: s.id,
+          regId: s.registration_id || 'REG-2026-0000',
+          nameUrdu: `${s.first_name} ${s.last_name || ''}`.trim(),
+          nameEn: `${s.first_name} ${s.last_name || ''}`.trim(),
+          classId: s.current_class_id || 'c11',
+          classNameUrdu: clsObj ? clsObj.name_ur : 'نامعلوم درجہ (ڈلیٹ شدہ)',
+          classNameEn: clsObj ? clsObj.name_en : 'Unknown Class'
+        };
+      });
+  }, [searchQuery, dbStudents, dbClasses]);
 
   // Handle selecting a student from search results (Auto-detects their class!)
   const handleSelectSearchedStudent = (student: any) => {
@@ -318,9 +329,9 @@ export function MarksEntryDesk() {
           if (markObj.obtained !== '' && markObj.obtained !== null && markObj.obtained !== undefined) {
             rowsToSave.push({
               exam_id: examId,
-              student_id: (std.id.length === 36) ? std.id : '33333333-3333-3333-3333-333333330111',
-              class_id: (selectedClass.length === 36) ? selectedClass : (selectedClass === 'c1' ? '11111111-1111-1111-1111-111111111101' : selectedClass === 'c18' ? '11111111-1111-1111-1111-111111111107' : '11111111-1111-1111-1111-111111111105'),
-              subject_id: (sub.id.length === 36) ? sub.id : '22222222-2222-2222-2222-222222220111',
+              student_id: std.id,
+              class_id: std.classId || selectedClass,
+              subject_id: sub.id,
               total_marks: Number(markObj.total) || 100,
               obtained_marks: Number(markObj.obtained) || 0,
               grade: markObj.grade !== '-' ? markObj.grade : calculateGrade(markObj.obtained, markObj.total),
@@ -341,129 +352,6 @@ export function MarksEntryDesk() {
       toast.error(err.message || 'Error saving marks to DB');
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleSeedMarks = async () => {
-    setSeedingDb(true);
-    try {
-      // 1. Seed 3 Authentic Real Classes
-      const realClasses = [
-        { id: '11111111-1111-1111-1111-111111111101', name_ur: 'قاعدہ (شعبہ حفظ و ناظرہ)', name_en: 'Qaida (Basics)', level_type: 'hifz', capacity: 40 },
-        { id: '11111111-1111-1111-1111-111111111105', name_ur: 'درجہ اولیٰ (عامہ اولیٰ)', name_en: 'Ula (Year 1 Alimiyah)', level_type: 'dars_nizami', capacity: 50 },
-        { id: '11111111-1111-1111-1111-111111111107', name_ur: 'درجہ ثامنہ (دورہِ حدیث)', name_en: 'Dora-e-Hadith (Final Year)', level_type: 'dars_nizami', capacity: 60 }
-      ];
-      await (supabase as any).from('classes').upsert(realClasses, { onConflict: 'id', ignoreDuplicates: true });
-
-      // 2. Seed 3 Authentic Real Students
-      const realStudents = [
-        {
-          id: '33333333-3333-3333-3333-333333330001',
-          registration_id: 'REG-2026-0001',
-          first_name: 'محمد زبیر بن عبداللہ',
-          last_name: '',
-          gender: 'male',
-          current_class_id: '11111111-1111-1111-1111-111111111101',
-          admission_date: '2026-01-10',
-          status: 'active',
-          father_name: 'عبداللہ خان قادری',
-          father_phone: '0300-1234567',
-          residential_address: 'لاہور، پاکستان'
-        },
-        {
-          id: '33333333-3333-3333-3333-333333330111',
-          registration_id: 'REG-2026-0111',
-          first_name: 'عامر بن عبداللہ (درجہ اولیٰ)',
-          last_name: '',
-          gender: 'male',
-          current_class_id: '11111111-1111-1111-1111-111111111105',
-          admission_date: '2026-01-10',
-          status: 'active',
-          father_name: 'عبداللہ خان قادری',
-          father_phone: '0300-1234567',
-          residential_address: 'ملتان، پاکستان'
-        },
-        {
-          id: '33333333-3333-3333-3333-333333330181',
-          registration_id: 'REG-2026-0181',
-          first_name: 'مولانا سعد بن طارق',
-          last_name: '',
-          gender: 'male',
-          current_class_id: '11111111-1111-1111-1111-111111111107',
-          admission_date: '2026-01-10',
-          status: 'active',
-          father_name: 'طارق عزیز عثمانی',
-          father_phone: '0321-7654321',
-          residential_address: 'کراچی، پاکستان'
-        }
-      ];
-      const { error: stdErr } = await (supabase as any).from('students').upsert(realStudents, { onConflict: 'id', ignoreDuplicates: true });
-
-      // 3. Seed 3 Authentic Real Subjects
-      const realSubjects = [
-        { id: '22222222-2222-2222-2222-222222220001', title_ur: 'نورانی قاعدہ (تختی 1 تا 10)', title_en: 'Noorani Qaida (1-10)', code: 'QAIDA-101', total_marks: 100, passing_marks: 40, class_id: '11111111-1111-1111-1111-111111111101' },
-        { id: '22222222-2222-2222-2222-222222220111', title_ur: 'صرف میر و نحو میر', title_en: 'Sarf Meer & Nahw Meer', code: 'SARF-111', total_marks: 100, passing_marks: 40, class_id: '11111111-1111-1111-1111-111111111105' },
-        { id: '22222222-2222-2222-2222-222222220181', title_ur: 'صحیح البخاری (جلد اول)', title_en: 'Sahih al-Bukhari (Vol 1)', code: 'HADITH-181', total_marks: 100, passing_marks: 40, class_id: '11111111-1111-1111-1111-111111111107' }
-      ];
-      await (supabase as any).from('subjects').upsert(realSubjects, { onConflict: 'id', ignoreDuplicates: true });
-
-      // 4. Seed 1 Authentic Exam Session
-      const examId = '77777777-7777-7777-7777-777777777701';
-      await (supabase as any).from('exams').upsert([{
-        id: examId,
-        title_ur: 'سالانہ امتحان 1447ھ',
-        title_en: 'Annual Examination 2026',
-        exam_type: 'annual',
-        start_date: '2026-06-01',
-        end_date: '2026-06-15',
-        is_published: true
-      }], { onConflict: 'id', ignoreDuplicates: true });
-
-      // 5. Seed 3 Authentic Real Exam Results
-      const realResults = [
-        {
-          exam_id: examId,
-          student_id: '33333333-3333-3333-3333-333333330001',
-          class_id: '11111111-1111-1111-1111-111111111101',
-          subject_id: '22222222-2222-2222-2222-222222220001',
-          total_marks: 100,
-          obtained_marks: 95,
-          grade: 'mumtaz',
-          remarks: 'حسنِ قراءت اور مخارج کا بہترین التزام'
-        },
-        {
-          exam_id: examId,
-          student_id: '33333333-3333-3333-3333-333333330111',
-          class_id: '11111111-1111-1111-1111-111111111105',
-          subject_id: '22222222-2222-2222-2222-222222220111',
-          total_marks: 100,
-          obtained_marks: 92,
-          grade: 'mumtaz',
-          remarks: 'نحوی ترکیب میں بہترین مہارت'
-        },
-        {
-          exam_id: examId,
-          student_id: '33333333-3333-3333-3333-333333330181',
-          class_id: '11111111-1111-1111-1111-111111111107',
-          subject_id: '22222222-2222-2222-2222-222222220181',
-          total_marks: 100,
-          obtained_marks: 97,
-          grade: 'mumtaz',
-          remarks: 'احادیث کا شاندار استحضار'
-        }
-      ];
-      const { error: resErr } = await (supabase as any).from('exam_results').upsert(realResults, { onConflict: 'exam_id, student_id, subject_id' });
-
-      if (stdErr || resErr) {
-        toast.error(locale === 'ur' ? `ایرر: ${(stdErr || resErr)?.message}` : `Error: ${(stdErr || resErr)?.message}`);
-      } else {
-        await fetchMarksFromDb();
-        toast.success(locale === 'ur' ? '🎉 الحمد للہ! اصل ڈیٹا بیس میں 3 حقیقی و مستند طلباء اور ان کے رزلٹ کا اندراج مکمل ہو گیا!' : '🎉 3 authentic real records seeded into live DB!');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Error seeding real records');
-    } finally {
-      setSeedingDb(false);
     }
   };
 
@@ -642,36 +530,17 @@ export function MarksEntryDesk() {
               <Select value={selectedClass} onValueChange={(val) => { setSelectedClass(val); }}>
                 <SelectTrigger className="h-11 font-bold text-xs sm:text-sm font-ur bg-purple-500/10 border-purple-500/30 text-purple-900 dark:text-purple-100"><SelectValue /></SelectTrigger>
                 <SelectContent className="font-ur max-h-72">
-                  <div className="px-2 py-1 text-[11px] font-black text-muted-foreground bg-muted/40">{locale === 'ur' ? '1. شعبہ حفظ و ناظرہ' : '1. Hifz & Nazra Dept'}</div>
-                  <SelectItem value="c1">{locale === 'ur' ? 'c1: قاعدہ (شعبہ حفظ و ناظرہ)' : 'c1: Qaida (Basics)'}</SelectItem>
-                  <SelectItem value="c2">{locale === 'ur' ? 'c2: ناظرہ قرآن کریم' : 'c2: Nazra Quran'}</SelectItem>
-                  <SelectItem value="c3">{locale === 'ur' ? 'c3: حفظِ قرآن کریم' : 'c3: Hifz al-Quran'}</SelectItem>
-
-                  <div className="px-2 py-1 text-[11px] font-black text-muted-foreground bg-muted/40 mt-1">{locale === 'ur' ? '2. شعبہ تجوید و قرآت' : '2. Tajweed & Qiraat'}</div>
-                  <SelectItem value="c4">{locale === 'ur' ? 'c4: تجوید (روایت حفص)' : 'c4: Tajweed Course'}</SelectItem>
-                  <SelectItem value="c5">{locale === 'ur' ? 'c5: قرآت (سبعہ و عشرہ)' : 'c5: Qiraat (Saba & Ashra)'}</SelectItem>
-
-                  <div className="px-2 py-1 text-[11px] font-black text-muted-foreground bg-muted/40 mt-1">{locale === 'ur' ? '3. شعبہ تعلیم بالغان' : '3. Adult Education'}</div>
-                  <SelectItem value="c6">{locale === 'ur' ? 'c6: دراسِاتِ دینیہ' : 'c6: Dirasat-e-Deeniyah'}</SelectItem>
-                  <SelectItem value="c7">{locale === 'ur' ? 'c7: آسان دینیات' : 'c7: Aasan Deeniyat'}</SelectItem>
-
-                  <div className="px-2 py-1 text-[11px] font-black text-muted-foreground bg-muted/40 mt-1">{locale === 'ur' ? '4. شعبہ کتب (درس نظامی)' : '4. Dars-e-Nizami'}</div>
-                  <SelectItem value="c8">{locale === 'ur' ? 'c8: اعدادیہ اول (مڈل / بنیاد)' : 'c8: Idadiyah Year 1'}</SelectItem>
-                  <SelectItem value="c9">{locale === 'ur' ? 'c9: اعدادیہ دوم' : 'c9: Idadiyah Year 2'}</SelectItem>
-                  <SelectItem value="c10">{locale === 'ur' ? 'c10: اعدادیہ سوم' : 'c10: Idadiyah Year 3'}</SelectItem>
-                  <SelectItem value="c11">{locale === 'ur' ? 'c11: درجہ اولیٰ (عامہ اولیٰ)' : 'c11: Ula (Year 1 Alimiyah)'}</SelectItem>
-                  <SelectItem value="c12">{locale === 'ur' ? 'c12: درجہ ثانیہ (عامہ ثانیہ)' : 'c12: Saniyah (Year 2 Alimiyah)'}</SelectItem>
-                  <SelectItem value="c13">{locale === 'ur' ? 'c13: درجہ ثالثہ (خاصہ اولیٰ)' : 'c13: Salisah (Year 3 Alimiyah)'}</SelectItem>
-                  <SelectItem value="c14">{locale === 'ur' ? 'c14: درجہ رابعہ (خاصہ ثانیہ)' : 'c14: Rabiah (Year 4 Alimiyah)'}</SelectItem>
-                  <SelectItem value="c15">{locale === 'ur' ? 'c15: درجہ خامسہ (عالیہ اولیٰ)' : 'c15: Khamisah (Year 5 Alimiyah)'}</SelectItem>
-                  <SelectItem value="c16">{locale === 'ur' ? 'c16: درجہ سادسہ (عالیہ ثانیہ)' : 'c16: Sadisah (Year 6 Alimiyah)'}</SelectItem>
-                  <SelectItem value="c17">{locale === 'ur' ? 'c17: درجہ سابعہ (موقوف علیہ)' : 'c17: Sabiah (Year 7 Alimiyah)'}</SelectItem>
-                  <SelectItem value="c18">{locale === 'ur' ? 'c18: درجہ ثامنہ (دورہِ حدیث)' : 'c18: Dora-e-Hadith (Final Year)'}</SelectItem>
-
-                  <div className="px-2 py-1 text-[11px] font-black text-muted-foreground bg-muted/40 mt-1">{locale === 'ur' ? '5. شعبہ تخصصات' : '5. Specializations'}</div>
-                  <SelectItem value="c19">{locale === 'ur' ? 'c19: تخصص فی التفسیر' : 'c19: Takhassus fil Tafseer'}</SelectItem>
-                  <SelectItem value="c20">{locale === 'ur' ? 'c20: تخصص فی الحدیث' : 'c20: Takhassus fil Hadith'}</SelectItem>
-                  <SelectItem value="c21">{locale === 'ur' ? 'c21: تخصص فی الفقہ والافتاء' : 'c21: Takhassus fil Fiqh'}</SelectItem>
+                  {dbClasses.length > 0 ? (
+                    dbClasses.map(c => (
+                      <SelectItem key={c.id} value={c.id} className="font-bold">
+                        {locale === 'ur' ? c.name_ur : c.name_en}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled className="font-bold">
+                      {locale === 'ur' ? 'کوئی درجہ موجود نہیں' : 'No Classes Found'}
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -703,17 +572,6 @@ export function MarksEntryDesk() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0 flex-wrap">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleSeedMarks}
-                disabled={seedingDb}
-                className="font-bold border-purple-500/50 text-purple-600 hover:bg-purple-500/10 gap-1.5 text-xs"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-                <span>{seedingDb ? (locale === 'ur' ? 'اندراج جاری ہے...' : 'Seeding...') : (locale === 'ur' ? '⚡ اصل ڈیٹا بیس میں 3 حقیقی طلباء و رزلٹ شامل کریں' : '⚡ Seed 3 Authentic Records to DB')}</span>
-              </Button>
               <Button onClick={handleSaveAll} disabled={isSaving} variant="emerald" size="sm" className="font-bold text-xs gap-1.5 shadow-md shrink-0">
                 <Save className="w-4 h-4 shrink-0" />
                 <span>{isSaving ? (locale === 'ur' ? 'محفوظ ہو رہا ہے...' : 'Saving...') : (locale === 'ur' ? '💾 اس درجے کا مکمل رزلٹ محفوظ کریں' : '💾 Save Class Results')}</span>
@@ -750,19 +608,8 @@ export function MarksEntryDesk() {
                           {locale === 'ur' ? `درجہ "${selectedClass}" میں ابھی کوئی طالب علم موجود نہیں ہے!` : `No students found in class "${selectedClass}"!`}
                         </h4>
                         <p className="text-xs text-muted-foreground max-w-md text-center font-bold">
-                          {locale === 'ur' ? 'براہ کرم شعبہ داخلہ و طلباء سے حقیقی طلباء کا اندراج کریں، یا نیچے دیے گئے بٹن سے اصل ڈیٹا بیس میں 3 حقیقی و مستند طلباء اور رزلٹ شامل کریں تاکہ کوئی کنفیوژن نہ رہے۔' : 'Please register students or seed 3 authentic records directly into the live database.'}
+                          {locale === 'ur' ? 'براہ کرم شعبہ داخلہ و طلباء سے حقیقی طلباء کا اندراج کریں اور متعلقہ کتب شامل کریں تاکہ کوئی کنفیوژن نہ رہے۔' : 'Please register students and add their corresponding subjects directly into the live database.'}
                         </p>
-                        <Button
-                          type="button"
-                          onClick={handleSeedMarks}
-                          disabled={seedingDb}
-                          variant="emerald"
-                          size="sm"
-                          className="font-bold text-xs gap-2 shadow-lg px-6 py-5 mt-2"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          <span>{seedingDb ? (locale === 'ur' ? 'ڈیٹا بیس میں اندراج جاری ہے...' : 'Seeding...') : (locale === 'ur' ? '⚡ اصل ڈیٹا بیس میں 3 حقیقی طلباء و رزلٹ کا اندراج کریں' : '⚡ Seed 3 Authentic Records to Live DB')}</span>
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -895,19 +742,8 @@ export function MarksEntryDesk() {
                   {locale === 'ur' ? `درجہ "${selectedClass}" میں ابھی کوئی طالب علم موجود نہیں ہے!` : `No students found in class "${selectedClass}"!`}
                 </h4>
                 <p className="text-xs text-muted-foreground max-w-md mx-auto mb-4 font-bold">
-                  {locale === 'ur' ? 'براہ کرم شعبہ داخلہ و طلباء سے حقیقی طلباء کا اندراج کریں، یا نیچے دیے گئے بٹن سے اصل ڈیٹا بیس میں 3 حقیقی و مستند طلباء کا اندراج کریں تاکہ کوئی کنفیوژن نہ رہے۔' : 'Please register students or seed 3 authentic records directly into the live database.'}
+                  {locale === 'ur' ? 'براہ کرم شعبہ داخلہ و طلباء سے حقیقی طلباء کا اندراج کریں تاکہ رزلٹ مرتب کیا جا سکے۔' : 'Please register students directly into the live database to enter marks.'}
                 </p>
-                <Button
-                  type="button"
-                  onClick={handleSeedMarks}
-                  disabled={seedingDb}
-                  variant="emerald"
-                  size="sm"
-                  className="font-bold text-xs gap-2 shadow-lg px-6 py-5"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>{seedingDb ? (locale === 'ur' ? 'ڈیٹا بیس میں اندراج جاری ہے...' : 'Seeding...') : (locale === 'ur' ? '⚡ اصل ڈیٹا بیس میں 3 حقیقی طلباء و رزلٹ کا اندراج کریں' : '⚡ Seed 3 Authentic Records to Live DB')}</span>
-                </Button>
               </div>
             ) : (
               <Table>

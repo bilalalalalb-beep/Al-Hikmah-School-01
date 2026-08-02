@@ -35,6 +35,8 @@ export function ExamReportsArchiveDesk() {
   const { locale, dir } = useLanguage();
   const [records, setRecords] = useState<any[]>([]);
   const [loadingDb, setLoadingDb] = useState(false);
+  const [dbClasses, setDbClasses] = useState<any[]>([]);
+  const [dbSubjects, setDbSubjects] = useState<any[]>([]);
   
   // Filter States
   const [selectedExam, setSelectedExam] = useState('all');
@@ -54,25 +56,21 @@ export function ExamReportsArchiveDesk() {
       const { data: stdData } = await (supabase as any).from('students').select('*');
       const { data: subData } = await (supabase as any).from('subjects').select('*');
       const { data: exmData } = await (supabase as any).from('exams').select('*');
+      const { data: clsData } = await (supabase as any).from('classes').select('*');
+
+      if (clsData) setDbClasses(clsData);
+      if (subData) setDbSubjects(subData);
 
       if (resData && resData.length > 0) {
         const mapped = resData.map((r: any) => {
           const std = stdData?.find((s: any) => s.id === r.student_id);
           const sub = subData?.find((s: any) => s.id === r.subject_id);
           const exm = exmData?.find((e: any) => e.id === r.exam_id);
+          const clsObj = clsData?.find((c: any) => c.id === r.class_id);
 
-          let cId = 'c1';
-          let cUr = 'قاعدہ (شعبہ حفظ و ناظرہ)';
-          let cEn = 'c1: Qaida';
-          if (r.class_id === '11111111-1111-1111-1111-111111111104' || r.class_id === 'c4') {
-            cId = 'c4'; cUr = 'تجوید (روایت حفص)'; cEn = 'c4: Tajweed Course';
-          } else if (r.class_id === '11111111-1111-1111-1111-111111111105' || r.class_id === 'c11') {
-            cId = 'c11'; cUr = 'درجہ اولیٰ (عامہ اولیٰ - سال اول)'; cEn = 'c11: Ula (Year 1)';
-          } else if (r.class_id && r.class_id.startsWith('c')) {
-            cId = r.class_id;
-            cUr = `درجہ ${r.class_id}`;
-            cEn = `Class ${r.class_id}`;
-          }
+          const cId = r.class_id || 'c1';
+          const cUr = clsObj ? clsObj.name_ur : 'درجہ';
+          const cEn = clsObj ? clsObj.name_en : 'Class';
 
           const tot = Number(r.total_marks) || 100;
           const obt = r.obtained_marks !== null && r.obtained_marks !== undefined ? Number(r.obtained_marks) : 0;
@@ -428,14 +426,9 @@ export function ExamReportsArchiveDesk() {
                 <SelectTrigger className="h-10 font-bold text-xs sm:text-sm font-ur bg-background"><SelectValue /></SelectTrigger>
                 <SelectContent className="font-ur max-h-72">
                   <SelectItem value="all" className="font-extrabold text-primary">{locale === 'ur' ? '🌐 تمام درجات (All Classes)' : '🌐 All Classes'}</SelectItem>
-                  <SelectItem value="c1">{locale === 'ur' ? 'c1: قاعدہ (شعبہ حفظ و ناظرہ)' : 'c1: Qaida'}</SelectItem>
-                  <SelectItem value="c2">{locale === 'ur' ? 'c2: ناظرہ قرآن کریم' : 'c2: Nazra Quran'}</SelectItem>
-                  <SelectItem value="c3">{locale === 'ur' ? 'c3: حفظِ قرآن کریم' : 'c3: Hifz al-Quran'}</SelectItem>
-                  <SelectItem value="c4">{locale === 'ur' ? 'c4: تجوید (روایت حفص)' : 'c4: Tajweed Course'}</SelectItem>
-                  <SelectItem value="c8">{locale === 'ur' ? 'c8: اعدادیہ اول (مڈل / بنیاد)' : 'c8: Idadiyah Year 1'}</SelectItem>
-                  <SelectItem value="c11">{locale === 'ur' ? 'c11: درجہ اولیٰ (عامہ اولیٰ)' : 'c11: Ula (Year 1)'}</SelectItem>
-                  <SelectItem value="c18">{locale === 'ur' ? 'c18: درجہ ثامنہ (دورہِ حدیث)' : 'c18: Dora-e-Hadith'}</SelectItem>
-                  <SelectItem value="c21">{locale === 'ur' ? 'c21: تخصص فی الفقہ والافتاء' : 'c21: Takhassus Fiqh'}</SelectItem>
+                  {dbClasses.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{locale === 'ur' ? c.name_ur : c.name_en}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -447,14 +440,11 @@ export function ExamReportsArchiveDesk() {
               </Label>
               <Select value={selectedSubject} onValueChange={setSelectedSubject}>
                 <SelectTrigger className="h-10 font-bold text-xs sm:text-sm font-ur bg-background"><SelectValue /></SelectTrigger>
-                <SelectContent className="font-ur">
+                <SelectContent className="font-ur max-h-72">
                   <SelectItem value="all" className="font-extrabold text-primary">{locale === 'ur' ? '🌐 تمام مضامین' : '🌐 All Subjects'}</SelectItem>
-                  <SelectItem value="c1_1">{locale === 'ur' ? '📖 نورانی قاعدہ' : '📖 Noorani Qaida'}</SelectItem>
-                  <SelectItem value="c2_1">{locale === 'ur' ? '📖 ناظرہ قرآن' : '📖 Nazra Quran'}</SelectItem>
-                  <SelectItem value="c3_2">{locale === 'ur' ? '📖 آموختہ (منزل) کی پختگی' : '📖 Manzil Revision'}</SelectItem>
-                  <SelectItem value="c11_1">{locale === 'ur' ? '📖 صرف میر و نحو میر' : '📖 Sarf Meer'}</SelectItem>
-                  <SelectItem value="c18_1">{locale === 'ur' ? '📖 صحیح البخاری (جلد اول)' : '📖 Sahih Bukhari 1'}</SelectItem>
-                  <SelectItem value="c21_1">{locale === 'ur' ? '📖 فتاویٰ شامی' : '📖 Fatawa Shami'}</SelectItem>
+                  {dbSubjects.map(s => (
+                    <SelectItem key={s.id} value={s.id}>{locale === 'ur' ? (s.title_ur || s.name_ur) : (s.title_en || s.name_en)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -528,7 +518,7 @@ export function ExamReportsArchiveDesk() {
                         {locale === 'ur' ? 'ابھی تک امتحانات کے نتائج لائیو ڈیٹا بیس میں موجود نہیں ہیں!' : 'No exam results found in live database!'}
                       </h4>
                       <p className="text-xs text-muted-foreground max-w-md text-center font-bold">
-                        {locale === 'ur' ? 'براہ کرم مارکس انٹری ڈیسک پر جا کر طلباء کے نمبرات درج کریں یا وہاں دیے گئے بٹن سے اصل ڈیٹا بیس میں 3 حقیقی و مستند طلباء اور رزلٹ کا اندراج کریں تاکہ یہاں شو ہوں۔' : 'Please go to Marks Entry desk to input scores or seed 3 authentic records into the live database.'}
+                        {locale === 'ur' ? 'براہ کرم مارکس انٹری ڈیسک پر جا کر طلباء کے نمبرات درج کریں تاکہ یہاں شو ہوں۔' : 'Please go to Marks Entry desk to input scores for enrolled students.'}
                       </p>
                     </div>
                   </TableCell>

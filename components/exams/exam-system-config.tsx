@@ -228,10 +228,10 @@ export function ExamSystemConfigDesk() {
         toast.error(locale === 'ur' ? `ایرر: ${error.message}` : `Error: ${error.message}`);
       } else {
         await fetchExamsFromDb();
-        toast.success(locale === 'ur' ? '🎉 الحمد للہ! 2 حقیقی و مستند امتحانی سیشنز لائیو DB میں شامل ہو گئے!' : '🎉 2 authentic exam sessions seeded into live DB!');
+        toast.success(locale === 'ur' ? '🎉 الحمد للہ! 2 حقیقی و مستند امتحانی سیشنز لائیو DB میں شامل ہو گئے!' : '🎉 2 authentic exam terms initialized in live DB!');
       }
     } catch (err: any) {
-      toast.error(err.message || 'Error seeding exams');
+      toast.error(err.message || 'Error initializing exams');
     } finally {
       setSeedingDb(false);
     }
@@ -375,7 +375,7 @@ export function ExamSystemConfigDesk() {
               className="font-bold border-white/20 bg-white/5 text-white hover:bg-white/10 gap-1.5 text-xs py-5 px-4 rounded-xl shadow-md"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>{seedingDb ? (locale === 'ur' ? 'امتحانات سیڈ ہو رہے ہیں...' : 'Seeding...') : (locale === 'ur' ? '⚡ لائیو DB میں امتحانات محفوظ کریں' : 'Seed Exams to DB')}</span>
+              <span>{seedingDb ? (locale === 'ur' ? 'امتحانات بن رہے ہیں...' : 'Initializing...') : (locale === 'ur' ? '⚡ لائیو DB میں امتحانات شامل کریں' : 'Initialize Exam Terms')}</span>
             </Button>
             <Button
               type="button"
